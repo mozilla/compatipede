@@ -1,0 +1,22 @@
+{
+  "name": "conductor",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node_modules/.bin/mocha --harmony --recursive tests"
+  },
+  "author": "",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "async": "^1.4.2",
+    "cradle": "^0.6.9",
+    "jannah-client": "asynchq/jannah-client",
+    "request": "^2.65.0"
+  },
+  "devDependencies": {
+    "mocha": "^2.3.3",
+    "nock": "^2.15.0",
+    "should": "^7.1.1"
+  }
+}
