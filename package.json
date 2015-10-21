@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "mocha": "^2.3.3",
+    "mock-couch": "dainis/mock-couch#changes_for_follow",
     "nock": "^2.15.0",
     "should": "^7.1.1"
   }
