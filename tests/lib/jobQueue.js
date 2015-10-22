@@ -85,7 +85,8 @@ describe('jobQueue', () => {
     beforeEach(function() {
       request = nock('http://localhost:7777')
         .post('/sessions', {
-          engine : 'gecko'
+          engine : 'gecko',
+          adblock : false
         })
         .reply(200, {
           url : 'http://tab-url'
