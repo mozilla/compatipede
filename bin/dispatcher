@@ -1,0 +1,47 @@
+#!/bin/sh
+":" //# comment; exec /usr/bin/env node --harmony "$0" "$@"
+
+//https://github.com/nodejs/node-v0.x-archive/pull/7007 there is no other way
+//how to pass harmony flag
+
+"use strict";
+
+let argv = require('yargs')
+  .usage('Usage: $0 <command> [options]')
+
+  .command('github', 'Fetch github issues and populate DB with them', (yargs) => {
+    let argv = yargs
+      .wrap(yargs.terminalWidth())
+
+      .help('h')
+      .alias('h', 'help')
+
+      .demand('couchdbHost')
+      .default('couchdbHost', 'localhost')
+      .describe('couchdbHost', 'Couchdb host')
+
+      .demand('couchdbPort')
+      .default('couchdbPort', 5984)
+      .describe('couchdbPort', 'Couchdb port')
+
+      .demand('couchdbUser')
+      .describe('couchdbUser', 'Couchdb username')
+
+      .demand('couchdbPassword')
+      .describe('couchdbPassword', 'Couchdb password')
+
+      .demand('couchdbDb')
+      .default('couchdbDb', 'compatipede')
+      .describe('couchdbDb', 'Couchdb database name')
+
+      .help('h')
+      .alias('h', 'help')
+
+      .argv;
+
+    require('../lib/githubDispatcher')(argv);
+  })
+  .demand(1)
+  .argv;
+
+

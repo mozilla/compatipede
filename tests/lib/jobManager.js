@@ -24,12 +24,66 @@ describe('jobManager', () => {
     jobManager.on('error', () => {}); //
   });
 
-  afterEach(function() {
+  afterEach(() => {
     couchdb.close();
   });
 
   it('should be exported as function', () => {
     JobManager.should.be.a.Function();
+  });
+
+  describe('addFromGithubIssue', () => {
+    let githubJob;
+
+    beforeEach(() => {
+      githubJob = {
+        id : '115795929',
+        issueUrl : 'https://github.com/webcompat/web-bugs/issues/1906',
+        forMobile : true,
+        url : 'https://google.com',
+        userAgent : 'Mozilla/5.0 (Android 5.1.1; Mobile; rv:45.0) Gecko/45.0 Firefox/45.0'
+      };
+    });
+
+    it('should add two jobs one for gecko engine and one for webkit', (done) => {
+      let docCount = 0;
+
+      couchdb.on('PUT', (data) => {
+        docCount += 1;
+
+        if(data.doc.jobDetails.engine === 'gecko') {
+          data.id.should.be.equal('github-115795929-gecko');
+        } else {
+          data.id.should.be.equal('github-115795929-webkit');
+        }
+
+        data.doc.jobDetails.targetURI.should.be.equal('https://google.com');
+        data.doc.jobDetails.screenSize.should.be.eql({
+          width : 640,
+          height : 1136
+        });
+        data.doc.jobDetails.userAgent.should.be.equal('Mozilla/5.0 (Android 5.1.1; Mobile; rv:45.0) Gecko/45.0 Firefox/45.0');
+        data.doc.github.should.be.eql({
+          id : '115795929',
+          issueUrl : 'https://github.com/webcompat/web-bugs/issues/1906'
+        });
+      });
+
+      jobManager.addFromGithubIssue(githubJob, (error) => {
+        should.not.exist(error);
+        docCount.should.be.equal(2);
+        done();
+      });
+    });
+
+    it('should not fail if there is already github job', (done) => {
+      jobManager.addFromGithubIssue(githubJob, (error) => {
+        jobManager.addFromGithubIssue(githubJob, (error) => {
+          should.not.exist(error);
+          done();
+        });
+      });
+    });
   });
 
   describe('updateWithResult', () => {
@@ -44,7 +98,7 @@ describe('jobManager', () => {
     });
 
     it('should update job with results', (done) => {
-      couchdb.on('PUT', function(data) {
+      couchdb.on('PUT', (data) => {
         data.doc.jobDetails.should.be.eql({
           engine : 'gecko'
         });
