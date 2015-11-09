@@ -136,8 +136,8 @@ describe('jobQueue', () => {
           return '*';
         })
         .post('/sessions', '*')
-        .reply(500, {
-          message : 'internal server error'
+        .reply(404, {
+          message : 'Not found'
         });
 
       jobQueue._processNext = () => {
@@ -299,6 +299,26 @@ describe('jobQueue', () => {
       });
 
       jobQueue._doTabSequence('someId', jobDetails, new BoarClient('http://hub:9999'));
+    });
+
+    it('should destroy tab if one of the steps fails', (done) => {
+       let userAgentRequest = nock('http://hub:9999')
+            .post('/setUserAgent', {
+              userAgent : 'some gecko ua'
+            })
+            .reply(500, {}),
+          destroyRequest = nock('http://hub:9999')
+            .post('/destroy', {})
+            .reply(200, {});
+
+        jobQueue.add = () => {
+          setTimeout(() => {
+            destroyRequest.done();
+            done();
+          }, 10);
+        };
+
+        jobQueue._doTabSequence('someId', jobDetails, new BoarClient('http://hub:9999'));
     });
   });
 });
