@@ -142,6 +142,36 @@ describe('jobManager', () => {
     });
   });
 
+  describe('markAsFailed', () => {
+    beforeEach(() => {
+      couchdb.addDoc('conductor', {
+        _id : 'failingJobId',
+        status : 'new',
+        jobDetails : {
+          engine : 'gecko'
+        }
+      });
+    });
+
+    it('should store failure details in couchdb', (done) => {
+      couchdb.on('PUT', function(data) {
+        data.id.should.be.equal('failingJobId');
+        data.doc.status.should.be.equal('failed');
+
+        should.exist(data.doc.failures);
+
+        data.doc.failures[Object.keys(data.doc.failures)[0]].date.should.be.a.String();
+        data.doc.failures[Object.keys(data.doc.failures)[0]].errors.should.be.eql(['error']);
+
+        done();
+      });
+
+      jobManager.markAsFailed('failingJobId', ['error'], (error) => {
+        should.not.exist(error);
+      });
+    });
+  });
+
   describe('startListening', () => {
     beforeEach(() => {
       jobManager.startListening();
