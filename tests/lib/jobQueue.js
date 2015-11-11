@@ -350,14 +350,14 @@ describe('jobQueue', () => {
         jobQueue._doTabSequence(jobObject, new BoarClient('http://hub:9999'));
     });
 
-    it('should emit failedJob event with id and errors when job fails 5 times', (done) => {
+    it('should emit failedJob event with id and errors when job fails 2 times', (done) => {
       let userAgentRequest = nock('http://hub:9999')
           .post('/setUserAgent', {
             userAgent : 'some gecko ua'
           })
           .reply(500, {});
 
-      jobObject.failureCount = 4;
+      jobObject.failureCount = 1;
       jobObject.errors = ['error1', 'error2', 'error3', 'error4'];
 
       jobQueue.once('failedJob', (id, errors) => {
