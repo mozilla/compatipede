@@ -143,7 +143,9 @@ describe('jobQueue', () => {
       };
     });
 
-    it('should queue job and then call _processNext if it fails with error other than 503', (done) => {
+    it('should add job and then call _processNext if it fails with error other than 503', (done) => {
+      let addedJob;
+
       nock.cleanAll();
       nock('http://localhost:7777')
         .filteringRequestBody(function() {
@@ -154,8 +156,12 @@ describe('jobQueue', () => {
           message : 'Not found'
         });
 
+      jobQueue._add = (job) => {
+        addedJob = job;
+      }
+
       jobQueue._processNext = () => {
-        jobQueue._queue.should.be.eql([jobObject]);
+        addedJob.should.be.equal(jobObject);
 
         jobQueue._requestingTab.should.be.equal(false);
         jobQueue._blocked.should.be.equal(false);
@@ -166,7 +172,9 @@ describe('jobQueue', () => {
       jobQueue._requestTab(jobObject);
     });
 
-    it('should queue job and then call _processNextWithDelay if it fails with 503 error', (done) => {
+    it('should add job and then call _processNextWithDelay if it fails with 503 error', (done) => {
+      let addedJob;
+
       nock.cleanAll();
       nock('http://localhost:7777')
         .filteringRequestBody(function() {
@@ -177,8 +185,12 @@ describe('jobQueue', () => {
           message : 'Failed to allocate tab'
         });
 
+      jobQueue._add = (job) => {
+        addedJob = job;
+      }
+
       jobQueue._processNextWithDelay = () => {
-        jobQueue._queue.should.be.eql([jobObject]);
+        addedJob.should.be.equal(jobObject);
 
         jobQueue._requestingTab.should.be.equal(false);
         jobQueue._blocked.should.be.equal(true);
