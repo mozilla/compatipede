@@ -325,7 +325,7 @@ describe('jobQueue', () => {
             })
             .reply(500, {});
 
-        jobQueue.add = () => {
+        jobQueue._add = () => {
           setTimeout(() => {
             destroyRequest.done();
             done();
@@ -342,7 +342,7 @@ describe('jobQueue', () => {
             })
             .reply(500, {});
 
-        jobQueue.add = () => {
+        jobQueue._add = (jobObject) => {
           jobObject.failureCount.should.be.equal(1);
           done();
         };
