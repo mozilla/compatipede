@@ -6,7 +6,7 @@ let JobQueue = require('../../lib/jobQueue'),
   BoarClient = require('../../node_modules/jannah-client/node_modules/boar-client');
 
 describe('jobQueue', () => {
-  let jobQueue, jobDetails;
+  let jobQueue, jobDetails, jobObject;
 
   before(() => {
     nock.disableNetConnect();
@@ -29,6 +29,12 @@ describe('jobQueue', () => {
       },
       targetURI : 'https://google.com'
     };
+    jobObject = {
+      id           : 'someId',
+      jobDetails   : jobDetails,
+      failureCount : 0,
+      errors       : []
+    };
   });
 
   afterEach(() => {
@@ -41,9 +47,14 @@ describe('jobQueue', () => {
 
   describe('add', () => {
     it('shoud call _requestTab if job can be processed right away', (done) => {
-      jobQueue._requestTab = (id, details) => {
-        id.should.be.equal('someId');
-        details.should.be.equal(jobDetails);
+      jobQueue._requestTab = (jobObject) => {
+        jobObject.should.be.eql({
+          id           : 'someId',
+          jobDetails   : jobDetails,
+          failureCount : 0,
+          errors       : []
+        });
+
         done();
       };
 
@@ -60,7 +71,9 @@ describe('jobQueue', () => {
       jobQueue.add('someId', jobDetails);
       jobQueue._queue.should.be.eql([{
         id : 'someId',
-        jobDetails : jobDetails
+        jobDetails : jobDetails,
+        failureCount : 0,
+        errors : []
       }]);
     });
 
@@ -73,8 +86,10 @@ describe('jobQueue', () => {
 
       jobQueue.add('someId', jobDetails);
       jobQueue._queue.should.be.eql([{
-        id : 'someId',
-        jobDetails : jobDetails
+        id           : 'someId',
+        jobDetails   : jobDetails,
+        failureCount : 0,
+        errors       : []
       }]);
     });
   });
@@ -97,7 +112,7 @@ describe('jobQueue', () => {
       jobQueue._processNext = () => {};
       jobQueue._doTabSequence = () => {};
 
-      jobQueue._requestTab('someId', jobDetails);
+      jobQueue._requestTab(jobObject);
       jobQueue._requestingTab.should.be.equal(true);
 
       //it isn't synchronous
@@ -109,42 +124,44 @@ describe('jobQueue', () => {
     });
 
     it('should call _doTabSequence with job and tab if jannah returned tab details', (done) => {
-      jobQueue._doTabSequence = (id, details, tab) => {
-        id.should.be.equal('someId');
-        details.should.be.equal(jobDetails);
+      jobQueue._doTabSequence = (job, tab) => {
+        job.should.be.equal(jobObject);
         tab.should.be.an.instanceof(BoarClient);
         done();
       };
 
-      jobQueue._requestTab('someId', jobDetails);
+      jobQueue._requestTab(jobObject);
     });
 
     it('should clear blocked flag if tab is allocated correctly', (done) => {
       jobQueue._blocked = true;
 
-      jobQueue._requestTab('someId', jobDetails);
+      jobQueue._requestTab(jobObject);
       jobQueue._doTabSequence = () => {
         jobQueue._blocked.should.be.equal(false);
         done();
       };
     });
 
-    it('should queue job and then call _processNext if it fails with error other than 503', (done) => {
+    it('should add job and then call _processNext if it fails with error other than 503', (done) => {
+      let addedJob;
+
       nock.cleanAll();
       nock('http://localhost:7777')
         .filteringRequestBody(function() {
           return '*';
         })
         .post('/sessions', '*')
-        .reply(500, {
-          message : 'internal server error'
+        .reply(404, {
+          message : 'Not found'
         });
 
+      jobQueue._add = (job) => {
+        addedJob = job;
+      }
+
       jobQueue._processNext = () => {
-        jobQueue._queue.should.be.eql([{
-          id : 'someId',
-          jobDetails : jobDetails
-        }]);
+        addedJob.should.be.equal(jobObject);
 
         jobQueue._requestingTab.should.be.equal(false);
         jobQueue._blocked.should.be.equal(false);
@@ -152,10 +169,12 @@ describe('jobQueue', () => {
         done();
       };
 
-      jobQueue._requestTab('someId', jobDetails);
+      jobQueue._requestTab(jobObject);
     });
 
-    it('should queue job and then call _processNextWithDelay if it fails with 503 error', (done) => {
+    it('should add job and then call _processNextWithDelay if it fails with 503 error', (done) => {
+      let addedJob;
+
       nock.cleanAll();
       nock('http://localhost:7777')
         .filteringRequestBody(function() {
@@ -166,11 +185,12 @@ describe('jobQueue', () => {
           message : 'Failed to allocate tab'
         });
 
+      jobQueue._add = (job) => {
+        addedJob = job;
+      }
+
       jobQueue._processNextWithDelay = () => {
-        jobQueue._queue.should.be.eql([{
-          id : 'someId',
-          jobDetails : jobDetails
-        }]);
+        addedJob.should.be.equal(jobObject);
 
         jobQueue._requestingTab.should.be.equal(false);
         jobQueue._blocked.should.be.equal(true);
@@ -178,20 +198,16 @@ describe('jobQueue', () => {
         done();
       };
 
-      jobQueue._requestTab('someId', jobDetails);
+      jobQueue._requestTab(jobObject);
     });
   });
 
   describe('_processNext', () => {
     it('should request tab for next job in the queue', (done) => {
-      jobQueue._queue.push({
-        id : 'someId',
-        jobDetails : jobDetails
-      });
+      jobQueue._queue.push(jobObject);
 
-      jobQueue._requestTab = (id, details) => {
-        id.should.be.equal('someId');
-        details.should.be.equal(jobDetails);
+      jobQueue._requestTab = (job) => {
+        job.should.be.equal(jobObject);
 
         jobQueue._queue.should.be.eql([]);
 
@@ -208,14 +224,10 @@ describe('jobQueue', () => {
 
       jobQueue = new JobQueue('http://localhost:7777', 500);
 
-      jobQueue._queue.push({
-        id : 'someId',
-        jobDetails : jobDetails
-      });
+      jobQueue._queue.push(jobObject);
 
-      jobQueue._requestTab = (id, details) => {
-        id.should.be.equal('someId');
-        details.should.be.equal(jobDetails);
+      jobQueue._requestTab = (job) => {
+        job.should.be.equal(jobObject);
         jobQueue._queue.should.be.eql([]);
 
         (Date.now() - startTime).should.be.within(400, 600);
@@ -228,6 +240,14 @@ describe('jobQueue', () => {
   });
 
   describe('_doTabSequence', () => {
+    let destroyRequest;
+
+    beforeEach(() => {
+      destroyRequest = nock('http://hub:9999')
+        .post('/destroy', {})
+        .reply(200, {});
+    });
+
     it('should make requests to boar to fulfill necessary steps', (done) => {
       let userAgentRequest = nock('http://hub:9999')
           .post('/setUserAgent', {
@@ -265,10 +285,7 @@ describe('jobQueue', () => {
                 receiving : 0
               }
             }
-          }),
-        destroyRequest = nock('http://hub:9999')
-          .post('/destroy', {})
-          .reply(200, {});
+          });
 
 
       jobQueue.once('jobResult', (result) => {
@@ -298,7 +315,59 @@ describe('jobQueue', () => {
         done();
       });
 
-      jobQueue._doTabSequence('someId', jobDetails, new BoarClient('http://hub:9999'));
+      jobQueue._doTabSequence(jobObject, new BoarClient('http://hub:9999'));
+    });
+
+    it('should destroy tab if one of the steps fails', (done) => {
+       let userAgentRequest = nock('http://hub:9999')
+            .post('/setUserAgent', {
+              userAgent : 'some gecko ua'
+            })
+            .reply(500, {});
+
+        jobQueue._add = () => {
+          setTimeout(() => {
+            destroyRequest.done();
+            done();
+          }, 10);
+        };
+
+        jobQueue._doTabSequence(jobObject, new BoarClient('http://hub:9999'));
+    });
+
+    it('should increase failed attempt count if one of the steps fails with an error', (done) => {
+       let userAgentRequest = nock('http://hub:9999')
+            .post('/setUserAgent', {
+              userAgent : 'some gecko ua'
+            })
+            .reply(500, {});
+
+        jobQueue._add = (jobObject) => {
+          jobObject.failureCount.should.be.equal(1);
+          done();
+        };
+
+        jobQueue._doTabSequence(jobObject, new BoarClient('http://hub:9999'));
+    });
+
+    it('should emit failedJob event with id and errors when job fails 2 times', (done) => {
+      let userAgentRequest = nock('http://hub:9999')
+          .post('/setUserAgent', {
+            userAgent : 'some gecko ua'
+          })
+          .reply(500, {});
+
+      jobObject.failureCount = 1;
+      jobObject.errors = ['error1', 'error2', 'error3', 'error4'];
+
+      jobQueue.once('failedJob', (id, errors) => {
+        id.should.be.equal('someId');
+        errors.should.be.eql(['error1', 'error2', 'error3', 'error4',
+          {message : 'setUserAgent: Boar tab failed and retuned error : 500'}]);
+        done();
+      });
+
+      jobQueue._doTabSequence(jobObject, new BoarClient('http://hub:9999'));
     });
   });
 });
