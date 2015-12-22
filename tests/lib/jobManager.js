@@ -111,6 +111,12 @@ describe('jobManager', () => {
         resources : {
           something : 'test'
         },
+        consoleLog : {
+          consoleLog : []
+        },
+        errorLog : {
+          consoleLog : []
+        },
         screenshot : 'test image png'
       }, (error) => {
         should.not.exist(error);

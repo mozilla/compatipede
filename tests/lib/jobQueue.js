@@ -158,7 +158,7 @@ describe('jobQueue', () => {
 
       jobQueue._add = (job) => {
         addedJob = job;
-      }
+      };
 
       jobQueue._processNext = () => {
         addedJob.should.be.equal(jobObject);
@@ -187,7 +187,7 @@ describe('jobQueue', () => {
 
       jobQueue._add = (job) => {
         addedJob = job;
-      }
+      };
 
       jobQueue._processNextWithDelay = () => {
         addedJob.should.be.equal(jobObject);
@@ -273,6 +273,16 @@ describe('jobQueue', () => {
           .reply(200, {
             data : 'base64 png'
           }),
+        consoleLogRequest = nock('http://hub:9999')
+          .post('/getConsoleLog', {})
+          .reply(200, {
+            consoleLog : [{msg : 'something'}]
+          }),
+        errorLogRequest = nock('http://hub:9999')
+          .post('/getErrorLog', {})
+          .reply(200, {
+            consoleLog : [{msg : 'something dangerous'}]
+          }),
         resourcesRequest = nock('http://hub:9999')
           .post('/getResources', {})
           .reply(200, {
@@ -301,7 +311,13 @@ describe('jobQueue', () => {
                 receiving : 0
               }
             },
-            screenshot : 'base64 png'
+            screenshot : 'base64 png',
+            consoleLog : {
+              consoleLog : [{msg : 'something'}]
+            },
+            errorLog : {
+              consoleLog : [{msg : 'something dangerous'}]
+            }
           }
         });
 
@@ -311,6 +327,8 @@ describe('jobQueue', () => {
         screenSizeRequest.done();
         resourcesRequest.done();
         destroyRequest.done();
+        consoleLogRequest.done();
+        errorLogRequest.done();
 
         done();
       });
