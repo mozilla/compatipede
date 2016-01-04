@@ -295,6 +295,11 @@ describe('jobQueue', () => {
                 receiving : 0
               }
             }
+          }),
+        pluginRequest = nock('http://hub:9999')
+          .post('/getPluginResults')
+          .reply(200, {
+            somePlugin : {}
           });
 
 
@@ -317,6 +322,9 @@ describe('jobQueue', () => {
             },
             errorLog : {
               consoleLog : [{msg : 'something dangerous'}]
+            },
+            pluginResults : {
+              somePlugin : {}
             }
           }
         });
@@ -329,6 +337,7 @@ describe('jobQueue', () => {
         destroyRequest.done();
         consoleLogRequest.done();
         errorLogRequest.done();
+        pluginRequest.done();
 
         done();
       });
