@@ -31,7 +31,7 @@ let argv = require('yargs')
       .describe('couchdbPassword', 'Couchdb password')
 
       .demand('couchdbDb')
-      .default('couchdbDb', 'compatipede')
+      .default('couchdbDb', 'compatipede-jobs')
       .describe('couchdbDb', 'Couchdb database name')
 
       .help('h')
@@ -42,6 +42,6 @@ let argv = require('yargs')
     require('../lib/githubDispatcher')(argv);
   })
   .demand(1)
+  .epilog('Fetches issues from some source')
   .argv;
-
 

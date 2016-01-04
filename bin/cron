@@ -7,10 +7,6 @@
 "use strict";
 
 let argv = require('yargs')
-  .demand('masterUrl')
-  .default('masterUrl', 'http://localhost:7331')
-  .describe('masterUrl', 'Jannah master url')
-
   .demand('couchdbHost')
   .default('couchdbHost', 'localhost')
   .describe('couchdbHost', 'Couchdb host')
@@ -25,15 +21,19 @@ let argv = require('yargs')
   .demand('couchdbPassword')
   .describe('couchdbPassword', 'Couchdb password')
 
-  .demand('couchdbDb')
-  .default('couchdbDb', 'compatipede-runs')
-  .describe('couchdbDb', 'Couchdb database name')
+  .demand('runDb')
+  .default('runDb', 'compatipede-runs')
+  .describe('runDb', 'Run result db(contains test results)')
 
-  .epilog('Runs jobs against jannah')
+  .demand('jobDb')
+  .default('jobDb', 'compatipede-jobs')
+  .describe('jobDb', 'Jobs db(holds job )')
+
+  .epilog('Run by cron to create new jannah runs')
 
   .help('h')
   .alias('h', 'help')
 
   .argv;
 
-require('../lib/conductor')(argv);
+require('../lib/cron')(argv);

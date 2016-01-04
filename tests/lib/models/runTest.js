@@ -1,27 +1,26 @@
 "use strict";
 
 let should = require('should'),
-  JobManager = require('../../lib/jobManager'),
+  Run = require('../../../lib/models/run'),
   mockCouch = require('mock-couch');
 
-describe('jobManager', () => {
-  let couchdb, jobManager;
+describe('run', () => {
+  let couchdb, run;
 
   beforeEach(function(done) {
     couchdb = mockCouch.createServer();
     couchdb.listen(5999, done);
-    couchdb.addDB('conductor', []);
-    jobManager = new JobManager({
+    couchdb.addDB('conductor-run', []);
+    run = new Run({
       host : 'localhost',
       port : 5999,
       auth : {
         username : 'couch',
         password : 'test'
       },
-      db : 'conductor',
       heartbeatInterval : 100
-    });
-    jobManager.on('error', () => {}); //
+    }, 'conductor-run');
+    run.on('error', () => {});
   });
 
   afterEach(() => {
@@ -29,66 +28,12 @@ describe('jobManager', () => {
   });
 
   it('should be exported as function', () => {
-    JobManager.should.be.a.Function();
-  });
-
-  describe('addFromGithubIssue', () => {
-    let githubJob;
-
-    beforeEach(() => {
-      githubJob = {
-        id : '115795929',
-        issueUrl : 'https://github.com/webcompat/web-bugs/issues/1906',
-        forMobile : true,
-        url : 'https://google.com',
-        userAgent : 'Mozilla/5.0 (Android 5.1.1; Mobile; rv:45.0) Gecko/45.0 Firefox/45.0'
-      };
-    });
-
-    it('should add two jobs one for gecko engine and one for webkit', (done) => {
-      let docCount = 0;
-
-      couchdb.on('PUT', (data) => {
-        docCount += 1;
-
-        if(data.doc.jobDetails.engine === 'gecko') {
-          data.id.should.be.equal('github-115795929-gecko');
-        } else {
-          data.id.should.be.equal('github-115795929-webkit');
-        }
-
-        data.doc.jobDetails.targetURI.should.be.equal('https://google.com');
-        data.doc.jobDetails.screenSize.should.be.eql({
-          width : 640,
-          height : 1136
-        });
-        data.doc.jobDetails.userAgent.should.be.equal('Mozilla/5.0 (Android 5.1.1; Mobile; rv:45.0) Gecko/45.0 Firefox/45.0');
-        data.doc.github.should.be.eql({
-          id : '115795929',
-          issueUrl : 'https://github.com/webcompat/web-bugs/issues/1906'
-        });
-      });
-
-      jobManager.addFromGithubIssue(githubJob, (error) => {
-        should.not.exist(error);
-        docCount.should.be.equal(2);
-        done();
-      });
-    });
-
-    it('should not fail if there is already github job', (done) => {
-      jobManager.addFromGithubIssue(githubJob, (error) => {
-        jobManager.addFromGithubIssue(githubJob, (error) => {
-          should.not.exist(error);
-          done();
-        });
-      });
-    });
+    Run.should.be.a.Function();
   });
 
   describe('updateWithResult', () => {
     beforeEach(() => {
-      couchdb.addDoc('conductor', {
+      couchdb.addDoc('conductor-run', {
         _id : 'correctJobId',
         status : 'new',
         jobDetails : {
@@ -99,15 +44,31 @@ describe('jobManager', () => {
 
     it('should update job with results', (done) => {
       couchdb.on('PUT', (data) => {
+
         data.doc.jobDetails.should.be.eql({
           engine : 'gecko'
         });
-        should.exist(data.doc.jobResults);
+        data.doc.jobResults.resources.should.be.eql({
+            something : 'test'
+        });
+        data.doc.jobResults.consoleLog.should.be.eql({
+          consoleLog : []
+        });
+        data.doc.jobResults.errorLog.should.be.eql({
+          consoleLog : []
+        });
+
+        data.doc._attachments.should.be.eql({
+          screenshot : {
+            content_type : 'image/png',
+            data : 'test image png'
+          }
+        });
         should.exist(data.doc._attachments);
         done();
       });
 
-      jobManager.updateWithResult('correctJobId', {
+      run.updateWithResult('correctJobId', {
         resources : {
           something : 'test'
         },
@@ -126,7 +87,7 @@ describe('jobManager', () => {
 
   describe('markAsInvalid', () => {
     beforeEach(() => {
-      couchdb.addDoc('conductor', {
+      couchdb.addDoc('conductor-run', {
         _id : 'invalidJobId',
         status : 'new',
         somethingElse : {
@@ -142,7 +103,7 @@ describe('jobManager', () => {
         done();
       });
 
-      jobManager.markAsInvalid('invalidJobId', (error) => {
+      run.markAsInvalid('invalidJobId', (error) => {
         should.not.exist(error);
       });
     });
@@ -150,7 +111,7 @@ describe('jobManager', () => {
 
   describe('markAsFailed', () => {
     beforeEach(() => {
-      couchdb.addDoc('conductor', {
+      couchdb.addDoc('conductor-run', {
         _id : 'failingJobId',
         status : 'new',
         jobDetails : {
@@ -172,19 +133,37 @@ describe('jobManager', () => {
         done();
       });
 
-      jobManager.markAsFailed('failingJobId', ['error'], (error) => {
+      run.markAsFailed('failingJobId', ['error'], (error) => {
         should.not.exist(error);
       });
     });
   });
 
+  describe('createNewRun', () => {
+    it('should add new document to the db', (done) => {
+      couchdb.on('POST', (data) => {
+        data.doc.status.should.be.equal('new');
+        data.doc.jobId.should.be.equal('someJobId');
+        data.doc.runNumber.should.be.equal(666);
+        data.doc.jobDetails.should.be.eql({
+          engine : 'webkit'
+        });
+        done();
+      });
+
+      run.createNewRun('someJobId', 666, {
+        engine : 'webkit'
+      }, () => {});
+    });
+  });
+
   describe('startListening', () => {
     beforeEach(() => {
-      jobManager.startListening();
+      run.startListening();
     });
 
     it('should emit new job events when jobs are added', (done) => {
-      jobManager.on('newJob', (job) => {
+      run.on('newJob', (job) => {
         job.jobDetails.should.be.eql({
           engine : 'gecko'
         });
@@ -192,7 +171,7 @@ describe('jobManager', () => {
         done();
       });
 
-      couchdb.addDoc('conductor', {
+      couchdb.addDoc('conductor-run', {
         _id : 'newJobId1',
         status : 'new',
         jobDetails : {
