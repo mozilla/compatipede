@@ -30,16 +30,18 @@ let argv = require('yargs')
       .demand('couchdbPassword')
       .describe('couchdbPassword', 'Couchdb password')
 
-      .demand('couchdbDb')
-      .default('couchdbDb', 'compatipede-jobs')
-      .describe('couchdbDb', 'Couchdb database name')
+      .demand('campaignDb')
+      .default('campaignDb', 'compatipede-campaigns')
+      .describe('campaignDb', 'Couchdb database name')
 
       .help('h')
       .alias('h', 'help')
 
       .argv;
 
-    require('../lib/githubDispatcher')(argv);
+    require('../lib/githubDispatcher')(argv, () => {
+      process.exit(0);
+    });
   })
   .demand(1)
   .epilog('Fetches issues from some source')

@@ -9,6 +9,9 @@
   "bin": {
     "conductor": "bin/conductor"
   },
+  "engines" : {
+    "node" : ">=4.2"
+  },
   "author": "",
   "license": "MPL-2.0",
   "dependencies": {

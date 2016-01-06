@@ -1,7 +1,7 @@
 "use strict";
 
-let Job = require('../../../lib/models/job'),
-  should = require('should'),
+let should = require('should'),
+  Job = require('../../../lib/models/job'),
   mockCouch = require('mock-couch');
 
 describe('job', () => {
@@ -10,7 +10,7 @@ describe('job', () => {
   beforeEach(function(done) {
     couchdb = mockCouch.createServer();
     couchdb.listen(5999, done);
-    couchdb.addDB('conductor-job', []);
+    couchdb.addDB('compatipede-job', []);
     job = new Job({
       host : 'localhost',
       port : 5999,
@@ -19,7 +19,7 @@ describe('job', () => {
         password : 'test'
       },
       heartbeatInterval : 100
-    }, 'conductor-job');
+    }, 'compatipede-job');
     job.on('error', () => {});
   });
 
@@ -31,98 +31,151 @@ describe('job', () => {
     Job.should.be.a.Function();
   });
 
-  describe('addFromGithub', () => {
-    let githubIssue;
-
+  describe('updateWithResult', () => {
     beforeEach(() => {
-      githubIssue = {
-        url       : 'https://google.com',
-        status    : 'open',
-        forMobile : true,
-        userAgent : 'someUserAgentFromBug',
-        engine    : 'gecko',
-        issueUrl  : 'http://github.com/web-compat/issues/1',
-        id        : 666,
-        number    : 1
-      };
+      couchdb.addDoc('compatipede-job', {
+        _id : 'correctJobId',
+        status : 'new',
+        jobDetails : {
+          engine : 'gecko'
+        }
+      });
     });
 
-    it('should add new job for open github issue', (done) => {
+    it('should update job with results', (done) => {
       couchdb.on('PUT', (data) => {
-        data.id.should.be.equal('github-666');
-        let doc = data.doc;
-        doc.autoTests.should.be.eql([]);
-        doc.autoTestable.should.be.equal(true);
-        doc.from.should.be.equal('github');
-        doc.status.should.be.equal('open');
-        doc.runCount.should.be.equal(0);
-        doc.details.should.be.eql({
-          targetURI  : 'https://google.com',
-          type       : 'mobile',
-          userAgents : ['someUserAgentFromBug'],
-          engines    : ['gecko']
+
+        data.doc.jobDetails.should.be.eql({
+          engine : 'gecko'
         });
-        doc.github.should.be.eql({
-          issueUrl : 'http://github.com/web-compat/issues/1',
-          id       : 666,
-          number   : 1
+        data.doc.jobResults.resources.should.be.eql({
+            something : 'test'
         });
+        data.doc.jobResults.consoleLog.should.be.eql({
+          consoleLog : []
+        });
+        data.doc.jobResults.errorLog.should.be.eql({
+          consoleLog : []
+        });
+
+        data.doc._attachments.should.be.eql({
+          screenshot : {
+            content_type : 'image/png',
+            data : 'test image png'
+          }
+        });
+        should.exist(data.doc._attachments);
         done();
       });
 
-      job.addFromGithub(githubIssue, () => {});
-    });
-
-    it('should not add anything if issue is closed and there is nothing on our side', (done) => {
-      githubIssue.status = 'closed';
-
-      couchdb.on('PUT', () => {
-        throw new Error('should not have been called');
-      });
-
-      job.addFromGithub(githubIssue, (error) => {
+      job.updateWithResult('correctJobId', {
+        resources : {
+          something : 'test'
+        },
+        consoleLog : {
+          consoleLog : []
+        },
+        errorLog : {
+          consoleLog : []
+        },
+        screenshot : 'test image png'
+      }, (error) => {
         should.not.exist(error);
-        done();
-      });
-    });
-
-    it('should update document status if there is already a job for github issue but issue got closed', (done) => {
-      job.addFromGithub(githubIssue, (error) => {
-        should.not.exist(error);
-        couchdb.on('PUT', (data) => {
-          data.doc.status.should.be.equal('closed');
-          should.exist(data.doc.closedAt);
-          done();
-        });
-
-        githubIssue.status = 'closed';
-        job.addFromGithub(githubIssue, () => {});
-      });
-    });
-
-    it('should not fail if job for github issue already exists', (done) => {
-      couchdb.on('PUT', () => {
-        throw new Error('should not have been called');
-      });
-
-      job.addFromGithub(githubIssue, (error) => {
-        should.not.exist(error);
-        job.addFromGithub(githubIssue, (error) => {
-          should.not.exist(error);
-          done();
-        });
       });
     });
   });
 
-  describe('setRunNumber', () => {
-    it('should set run number for document', () => {
-      couchdb.on('PUT', (data) => {
-        data.doc.runCount.should.be.equal(666);
+  describe('markAsInvalid', () => {
+    beforeEach(() => {
+      couchdb.addDoc('compatipede-job', {
+        _id : 'invalidJobId',
+        status : 'new',
+        somethingElse : {
+          engine : 'gecko'
+        }
+      });
+    });
+
+    it('should update status of document and set it to invalid', (done) => {
+      couchdb.on('PUT', function(data) {
+        data.id.should.be.equal('invalidJobId');
+        data.doc.status.should.be.equal('invalid');
         done();
       });
 
-      job.setRunNumber('someId', 666, () => {});
+      job.markAsInvalid('invalidJobId', (error) => {
+        should.not.exist(error);
+      });
+    });
+  });
+
+  describe('markAsFailed', () => {
+    beforeEach(() => {
+      couchdb.addDoc('compatipede-job', {
+        _id : 'failingJobId',
+        status : 'new',
+        jobDetails : {
+          engine : 'gecko'
+        }
+      });
+    });
+
+    it('should store failure details in couchdb', (done) => {
+      couchdb.on('PUT', function(data) {
+        data.id.should.be.equal('failingJobId');
+        data.doc.status.should.be.equal('failed');
+
+        data.doc.failure.date.should.be.a.String();
+        data.doc.failure.errors.should.be.eql(['error']);
+
+        done();
+      });
+
+      job.markAsFailed('failingJobId', ['error'], (error) => {
+        should.not.exist(error);
+      });
+    });
+  });
+
+  describe('createNewRun', () => {
+    it('should add new document to the db', (done) => {
+      couchdb.on('POST', (data) => {
+        data.doc.status.should.be.equal('new');
+        data.doc.jobId.should.be.equal('someJobId');
+        data.doc.runNumber.should.be.equal(666);
+        data.doc.jobDetails.should.be.eql({
+          engine : 'webkit'
+        });
+        done();
+      });
+
+      job.createNewRun('someJobId', 666, {
+        engine : 'webkit'
+      }, () => {});
+    });
+  });
+
+  describe('startListening', () => {
+    beforeEach(() => {
+      job.startListening();
+    });
+
+    it('should emit new job events when jobs are added', (done) => {
+      job.on('newJob', (job) => {
+        job.jobDetails.should.be.eql({
+          engine : 'gecko'
+        });
+        job._id.should.be.equal('newJobId1');
+        done();
+      });
+
+      couchdb.addDoc('compatipede-job', {
+        _id : 'newJobId1',
+        status : 'new',
+        jobDetails : {
+          engine : 'gecko'
+        }
+      });
     });
   });
 });
