@@ -26,7 +26,7 @@ let argv = require('yargs')
   .describe('couchdbPassword', 'Couchdb password')
 
   .demand('couchdbDb')
-  .default('couchdbDb', 'compatipede-adhoc-runs')
+  .default('couchdbDb', 'compatipede-adhoc-jobs')
   .describe('couchdbDb', 'Couchdb database name')
 
   .epilog('Runs adhoc jobs against jannah. NB! results wont get checked against regression tests')
