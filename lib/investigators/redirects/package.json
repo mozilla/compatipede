@@ -1,0 +1,4 @@
+{
+  "name": "redirects-investigator", // Needs to match the entry to the autoregression tests  array used in the campaign
+  "main": "redirects.js"
+}
