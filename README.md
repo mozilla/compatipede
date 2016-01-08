@@ -1,6 +1,7 @@
 # compatipede
 
-To run conductor which will send jobs to jannah execut ```bin/conductor```
+To run conductor which will send jobs to jannah execute ```bin/conductor```
+To run serial conductor that will fetch github issues and also create jobs run ```bin\compatipede```
 
 There is no frontend to add new jobs, they can be added only manually
 
