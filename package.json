@@ -9,8 +9,8 @@
   "bin": {
     "conductor": "bin/conductor"
   },
-  "engines" : {
-    "node" : ">=4.2"
+  "engines": {
+    "node": ">=4.2"
   },
   "author": "",
   "license": "MPL-2.0",
@@ -25,6 +25,8 @@
     "useragent": "^2.1.8",
     "valid-url": "^1.0.9",
     "winston": "^1.1.1",
+    "winston-papertrail": "^1.0.2",
+    "winston-sentry": "^0.1.1",
     "yargs": "^3.29.0"
   },
   "devDependencies": {
