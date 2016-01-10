@@ -1,6 +1,6 @@
 "use strict";
 
-let Redirects = require('../../../lib/investigators').Redirects,
+let Redirects = require('../../../lib/analyzers/redirects/index'),
   should = require('should');
 
 describe('redirects.js', () => {
@@ -13,9 +13,9 @@ describe('redirects.js', () => {
     };
   });
 
-  describe('investigate', () => {
+  describe('analyse', () => {
     it('should return false if not all redirects match', (done) => {
-      redirects.investigate(campaign, [{
+      redirects.analyse(campaign, [{
         redirects : {
           'http://resource1' : 'http://redirect1',
           'http://resource2' : 'http://redirect2'
@@ -36,7 +36,7 @@ describe('redirects.js', () => {
     });
 
     it('should return true if all redirects match', (done) => {
-      redirects.investigate(campaign, [{
+      redirects.analyse(campaign, [{
         redirects : {
           'http://resource1' : 'http://redirect1',
           'http://resource2' : 'http://redirect2'

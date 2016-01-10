@@ -1,5 +1,5 @@
 {
-  "name": "investigators",
+  "name": "analyzers",
   "version": "0.1.0",
   "description": "Compatipede auto-regression tests",
   "main": "index.js",
