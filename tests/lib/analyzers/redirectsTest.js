@@ -29,7 +29,7 @@ describe('redirects.js', () => {
         should.not.exist(error);
         result.correct.should.be.equal(false);
         result.diff.should.be.eql({
-          'http://resource2' : ['http://redirect3', 'http://redirect2']
+          'http://resource2' : ['http://redirect2', 'http://redirect3']
         });
         done();
       });
