@@ -24,7 +24,6 @@
     "image-ms-ssim": "^0.2.0",
     "jannah-client": "asynchq/jannah-client",
     "node-uuid": "^1.4.3",
-    "opencv": "^4.0.0",
     "request": "^2.65.0",
     "statsd-client": "^0.2.1",
     "sugar": "^1.4.1",
