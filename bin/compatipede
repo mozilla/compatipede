@@ -36,6 +36,10 @@ let argv = require('yargs')
   .demand('processId')
   .describe('processId', 'Process id used when allocating campaigns')
 
+  .demand('interval')
+  .describe('interval', 'Interval how often compatipede is run')
+  .choices('interval', ['1w', '1d', '1h', '6h', '12h'])
+
   .help('h')
   .alias('h', 'help')
 

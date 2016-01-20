@@ -36,6 +36,56 @@ describe('serialExecutor', () => {
     serialExecutor = new SerialExecutor('someProcessId', jobModel, campaignModel, tabSequence);
   });
 
+  describe('set runTime', () => {
+    it('should convert 1h to current hour', () => {
+      serialExecutor.runTime = '1h';
+      let d = new Date();
+
+      d.setUTCMinutes(0);
+      d.setUTCSeconds(0);
+      d.setUTCMilliseconds(0);
+
+      serialExecutor._runTime.should.be.eql(d.getTime());
+    });
+
+    it('should convert 6h closest division of 24 that divides without remainder', () => {
+      serialExecutor.runTime = '6h';
+      let d = new Date();
+
+      d.setUTCHours(Math.floor(d.getUTCHours() / 4));
+      d.setUTCMinutes(0);
+      d.setUTCSeconds(0);
+      d.setUTCMilliseconds(0);
+
+      serialExecutor._runTime.should.be.eql(d.getTime());
+    });
+
+    it('should convert 1d to start of current day', () => {
+      serialExecutor.runTime = '1d';
+      let d = new Date();
+
+      d.setUTCHours(0);
+      d.setUTCMinutes(0);
+      d.setUTCSeconds(0);
+      d.setUTCMilliseconds(0);
+
+      serialExecutor._runTime.should.be.eql(d.getTime());
+    });
+
+    it('should convert 1w to start of current week', () => {
+      serialExecutor.runTime = '1w';
+      let d = new Date();
+
+      d.setUTCDate(d.getUTCDate() - d.getUTCDay());
+      d.setUTCHours(0);
+      d.setUTCMinutes(0);
+      d.setUTCSeconds(0);
+      d.setUTCMilliseconds(0);
+
+      serialExecutor._runTime.should.be.eql(d.getTime());
+    });
+  });
+
   describe('loop', () => {
     let cb;
     beforeEach(() => {
@@ -49,6 +99,8 @@ describe('serialExecutor', () => {
           runCount : 666
         });
       };
+
+      serialExecutor.runTime = '1w';
     });
 
     it('should fetch next available campaign', (done) => {
