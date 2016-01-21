@@ -9,7 +9,7 @@
   "bin": {
     "conductor": "bin/conductor",
     "compatipede": "bin/compatipede",
-    "dispatcher" : "bin/dispatcher"
+    "dispatcher": "bin/dispatcher"
   },
   "engines": {
     "node": ">=4.2"
@@ -34,6 +34,7 @@
   "devDependencies": {
     "mocha": "^2.3.3",
     "mock-couch": "dainis/mock-couch#changes_for_follow",
+    "mockery": "^1.4.0",
     "nock": "^2.15.0",
     "should": "^7.1.1"
   }

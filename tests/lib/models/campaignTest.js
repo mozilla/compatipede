@@ -132,4 +132,39 @@ describe('campaign', () => {
       campaign.setRunNumber('someCampaignId', 666, () => {});
     });
   });
+
+  describe('saveComparisionBetweenVersions', () => {
+    beforeEach(() => {
+      couchdb.addDoc('compatipede-campaign', {
+        _id : 'someCampaignId'
+      });
+    });
+
+    it('should store result in db', (done) => {
+      couchdb.on('PUT', (data) => {
+        should.exist(data.doc.autoTestResultsBetweenVersions.date);
+        data.doc.autoTestResultsBetweenVersions.versions.should.be.eql({
+          version1 : 1,
+          version2 : 2
+        });
+        data.doc.autoTestResultsBetweenVersions.results.should.be.eql({
+          redirects : {
+            correct : true,
+            diff : {}
+          }
+        });
+        done();
+      });
+
+      campaign.saveComparisionBetweenVersions('someCampaignId', {
+        version1 : 1,
+        version2 : 2
+      }, {
+        redirects : {
+          correct : true,
+          diff : {}
+        }
+      }, () => {});
+    });
+  });
 });

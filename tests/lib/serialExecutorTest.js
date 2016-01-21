@@ -4,6 +4,7 @@ let SerialExecutor = require('../../lib/serialExecutor'),
   CampaignModel = require('../../lib/models/campaign'),
   JobModel = require('../../lib/models/job'),
   TabSequence = require('../../lib/tabSequence'),
+  mockery = require('mockery'),
   should = require('should');
 
 describe('serialExecutor', () => {
@@ -393,6 +394,159 @@ describe('serialExecutor', () => {
 
         done();
       });
+    });
+  });
+
+  describe('_comparePreviousRunResults', () => {
+    let campaign, analyzers;
+
+    beforeEach(() => {
+      analyzers = {
+        redirects : {
+          analyse : (campaign, results, callback) => {
+            callback(null, {
+              correct : true,
+              diff    : {}
+            });
+          }
+        }
+      };
+
+      mockery.enable({
+        warnOnReplace: false,
+        warnOnUnregistered: true
+      });
+
+      mockery.registerMock('./analyzers', analyzers);
+
+      campaign = {
+        _id          : 'someId',
+        autoTestable : true,
+        autoTests    : ['redirects'],
+        runCount     : 13
+      };
+
+      let id = 0;
+
+      jobModel.getCampaignRunResults = (campaignId, runNumber, callback) => {
+        id += 1;
+        callback(null, [{
+          _id : 'someId'+id,
+          status : 'completed',
+          jobResults : {
+            redirects : {
+              'something' : 'url'+id
+            }
+          }
+        }]);
+      };
+
+      campaignModel.saveComparisionBetweenVersions = (campaignId, versions, result, callback) => {
+        callback();
+      };
+    });
+
+    afterEach(() => {
+      mockery.disable();
+    });
+
+    it('should return callback right away if there isnt enough runs', (done) => {
+      campaign.runCount = 1;
+
+      serialExecutor._comparePreviousRunResults(campaign, done);
+    });
+
+    it('should return callback if campaign isnt auto testable', (done) => {
+      campaign.autoTestable = false;
+
+      serialExecutor._comparePreviousRunResults(campaign, done);
+    });
+
+    it('should return callback if no auto tests exist', (done) => {
+      campaign.autoTests = [];
+      serialExecutor._comparePreviousRunResults(campaign, done);
+    });
+
+    it('should read both current run and previous run result', () => {
+      let calledWith = [];
+
+      jobModel.getCampaignRunResults = (campaignId, runNumber, callback) => {
+        campaignId.should.be.equal('someId');
+        calledWith.push(runNumber);
+        callback.should.be.a.Function();
+      };
+
+      serialExecutor._comparePreviousRunResults(campaign);
+
+      calledWith.length.should.be.equal(2);
+      calledWith.should.containEql(13);
+      calledWith.should.containEql(12);
+    });
+
+    it('should return callback if any of results were failed', (done) => {
+     jobModel.getCampaignRunResults = (campaignId, runNumber, callback) => {
+        callback(null, [{
+          _id : 'someId',
+          status : 'failed'
+        }]);
+      };
+
+      serialExecutor._comparePreviousRunResults(campaign, done);
+    });
+
+    it('should execute avaialble auto regression tests', (done) => {
+      analyzers.redirects.analyse = (xcampaign, results, callback) => {
+        xcampaign.should.be.equal(campaign);
+        results.length.should.be.equal(2);
+
+        results.should.containEql({
+          redirects : {
+            'something' : 'url1'
+          }
+        });
+        results.should.containEql({
+          redirects : {
+            'something' : 'url2'
+          }
+        });
+
+        callback.should.be.a.Function();
+
+        done();
+      };
+
+      serialExecutor._comparePreviousRunResults(campaign);
+    });
+
+    it('should not fail if there is invalid auto regression specified', () => {
+      campaign.autoTests = ['redirects', 'somethingreallybogusisgoingtohappenrighthereandnow'];
+
+      serialExecutor._comparePreviousRunResults(campaign, () => {});
+    });
+
+    it('should store auto regression test results in DB', (done) => {
+      campaignModel.saveComparisionBetweenVersions = (campaignId, versions, results, callback) => {
+        campaignId.should.be.equal('someId');
+        versions.should.be.eql({
+          version1 : 13,
+          version2 : 12
+        });
+        results.should.be.eql({
+          redirects : {
+            correct : true,
+            diff : {}
+          }
+        });
+
+        callback.should.be.a.Function();
+        done();
+      };
+
+      serialExecutor._comparePreviousRunResults(campaign, ()=> {});
+    });
+
+    it('should call callback once everything is done', (done) => {
+      serialExecutor._comparePreviousRunResults(campaign, done);
     });
   });
 });
