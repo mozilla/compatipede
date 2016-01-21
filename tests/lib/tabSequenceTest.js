@@ -191,6 +191,13 @@ describe('tabSequence', () => {
           .reply(200, {
             consoleLog : [{msg : 'something dangerous'}]
           }),
+        redirectRequest = nock('http://hub:9999')
+          .post('/getRedirects', {})
+          .reply(200, {
+            redirects : {
+              something : 'to somewhere'
+            }
+          }),
         resourcesRequest = nock('http://hub:9999')
           .post('/getResources', {})
           .reply(200, {
@@ -212,7 +219,6 @@ describe('tabSequence', () => {
 
       jobObject.callback = (error, result) => {
         should.not.exist(error);
-
         result.should.be.eql({
           id : 'someId',
           success : true,
@@ -235,6 +241,9 @@ describe('tabSequence', () => {
             },
             pluginResults : {
               somePlugin : {}
+            },
+            redirects : {
+              something : 'to somewhere'
             }
           }
         });
@@ -249,6 +258,7 @@ describe('tabSequence', () => {
         errorLogRequest.done();
         pluginRequest.done();
         screenshotRequest.done();
+        redirectRequest.done();
 
         done();
       };
