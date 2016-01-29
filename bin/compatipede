@@ -33,6 +33,16 @@ let argv = require('yargs')
   .default('jobsDb', 'compatipede-jobs')
   .describe('jobsDb', 'Database for jobs and their results')
 
+  .demand('emailDb')
+  .default('emailDb', 'compatipede-emails')
+  .describe('emailDb', 'From where recipients for execution reports are taken')
+
+  .demand('smtpString')
+  .describe('smtpString', 'SMTP connection string something like smtp[s]://<user>:<password>@<server>[:<port>]')
+
+  .demand('emailFrom')
+  .describe('emailFrom', 'From email address')
+
   .demand('processId')
   .describe('processId', 'Process id used when allocating campaigns')
 
