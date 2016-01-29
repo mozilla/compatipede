@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test node_modules/.bin/mocha --harmony --recursive tests"
+    "test": "NODE_ENV=test node_modules/.bin/mocha --harmony --recursive tests",
+	"deploy": "./bin/deploy.sh"
   },
   "bin": {
     "conductor": "bin/conductor",
