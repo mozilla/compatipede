@@ -1,4 +1,4 @@
-# compatipede
+# Compatipede
 
 To run conductor which will send jobs to jannah execute ```bin/conductor```
 To run serial conductor that will fetch github issues and also create jobs run ```bin\compatipede```
