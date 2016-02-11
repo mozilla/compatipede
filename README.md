@@ -7,7 +7,7 @@ There is no frontend to add new jobs, they can be added only manually
 
 ```bash
 $ curl -H 'Content-Type: application/json' \
-    -X POST http://127.0.0.1:5984/compatipede-adhoc-runs \
+    -X POST http://127.0.0.1:5984/compatipede-adhoc-jobs \
     -d '{
       "status": "new",
       "jobDetails" : {
