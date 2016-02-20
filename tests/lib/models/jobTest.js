@@ -68,7 +68,7 @@ describe('job', () => {
         done();
       });
 
-      job.updateWithResult('correctJobId', {
+      job.updateWithResult('correctJobId', {}, {
         resources : {
           something : 'test'
         },
