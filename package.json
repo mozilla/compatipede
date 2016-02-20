@@ -30,6 +30,7 @@
     "request": "^2.65.0",
     "statsd-client": "^0.2.1",
     "sugar": "^1.4.1",
+    "tldextract": "^0.0.4",
     "useragent": "^2.1.8",
     "valid-url": "^1.0.9",
     "yargs": "^3.29.0"
