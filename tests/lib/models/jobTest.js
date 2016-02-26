@@ -56,12 +56,8 @@ describe('job', () => {
         data.doc.jobResults.resources.should.be.eql({
             something : 'test'
         });
-        data.doc.jobResults.consoleLog.should.be.eql({
-          consoleLog : []
-        });
-        data.doc.jobResults.errorLog.should.be.eql({
-          consoleLog : []
-        });
+        data.doc.jobResults.consoleLog.should.be.eql([]);
+        data.doc.jobResults.errorLog.should.be.eql([]);
 
         data.doc._attachments.should.be.eql({
           screenshot : {
