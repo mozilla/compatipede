@@ -20,7 +20,7 @@ describe('jobQueue', () => {
 
   after(() => {
     nock.enableNetConnect();
-    nock.cleanAll();
+    // nock.cleanAll();
   });
 
   beforeEach(() => {
@@ -305,7 +305,9 @@ describe('jobQueue', () => {
         pluginRequest = nock('http://hub:9999')
           .post('/getPluginResults')
           .reply(200, {
-            somePlugin : {}
+            results : {
+              somePlugin : {}
+            }
           });
 
 

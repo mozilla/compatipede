@@ -220,7 +220,9 @@ describe('tabSequence', () => {
         pluginRequest = nock('http://hub:9999')
           .post('/getPluginResults')
           .reply(200, {
-            somePlugin : {}
+            results : {
+              somePlugin : {}
+            }
           });
 
       jobObject.callback = (error, result) => {
