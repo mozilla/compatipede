@@ -3,7 +3,13 @@
 let JobQueue = require('../../lib/jobQueue'),
   should = require('should'),
   nock = require('nock'),
-  BoarClient = require('../../node_modules/jannah-client/node_modules/boar-client');
+  BoarClient;
+
+  try {
+    BoarClient = require('../../node_modules/jannah-client/node_modules/boar-client');
+  } catch(e) {
+    BoarClient = require('boar-client');
+  }
 
 describe('jobQueue', () => {
   let jobQueue, jobDetails, jobObject;

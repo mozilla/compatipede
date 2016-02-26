@@ -3,7 +3,13 @@
 let TabSequence = require('../../lib/tabSequence'),
   should = require('should'),
   nock = require('nock'),
-  BoarClient = require('../../node_modules/jannah-client/node_modules/boar-client');
+  BoarClient;
+
+  try {
+    BoarClient = require('../../node_modules/jannah-client/node_modules/boar-client');
+  } catch(e) {
+    BoarClient = require('boar-client');
+  }
 
 describe('tabSequence', () => {
   let tabSequence, jobDetails, jobObject;
