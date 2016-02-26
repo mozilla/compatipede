@@ -50,6 +50,11 @@ let argv = require('yargs')
   .describe('interval', 'Interval how often compatipede is run')
   .choices('interval', ['1w', '1d', '1h', '6h', '12h'])
 
+  .demand('saveResources')
+  .describe('saveResources', 'Determine if the source code (HTML) and/or HTTP headers of files received will be saved')
+  .choices('saveResources', ['yes', 'no'])
+  .default('saveResources', 'yes')
+
   .help('h')
   .alias('h', 'help')
 

@@ -18,7 +18,7 @@ describe('serialExecutor', () => {
         username : 'couch',
         password : 'test'
       }
-    }, 'compatipede-jobs');
+    }, 'compatipede-jobs', true);
 
     campaignModel = new CampaignModel({
       host : 'localhost',

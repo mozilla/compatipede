@@ -29,6 +29,11 @@ let argv = require('yargs')
   .default('couchdbDb', 'compatipede-adhoc-jobs')
   .describe('couchdbDb', 'Couchdb database name')
 
+  .demand('saveResources')
+  .describe('saveResources', 'Determine if the source code (HTML) and/or HTTP headers of files received will be saved')
+  .choices('saveResources', ['yes', 'no'])
+  .default('saveResources', 'yes')
+
   .epilog('Runs adhoc jobs against jannah. NB! results wont get checked against regression tests')
 
   .help('h')

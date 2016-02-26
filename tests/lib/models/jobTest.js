@@ -19,7 +19,7 @@ describe('job', () => {
         password : 'test'
       },
       heartbeatInterval : 100
-    }, 'compatipede-job');
+    }, 'compatipede-job', true);
     job.on('error', () => {});
   });
 
