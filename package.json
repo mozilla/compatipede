@@ -33,7 +33,8 @@
     "tldextract": "^0.0.4",
     "useragent": "^2.1.8",
     "valid-url": "^1.0.9",
-    "yargs": "^3.29.0"
+    "yargs": "^3.29.0",
+    "moz-data-site-toplists": "^1.0.0"
   },
   "devDependencies": {
     "mocha": "^2.3.3",

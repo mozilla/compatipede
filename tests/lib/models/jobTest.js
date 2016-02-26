@@ -68,7 +68,7 @@ describe('job', () => {
         done();
       });
 
-      job.updateWithResult('correctJobId', {}, {
+      job.updateWithResult('correctJobId', {'targetURI':'http://test.example.com'}, {
         resources : {
           something : 'test'
         },
@@ -150,7 +150,8 @@ describe('job', () => {
       });
 
       job.createNewRun('someJobId', 666, {
-        engine : 'webkit'
+        engine : 'webkit',
+        targetURI:'http://test.example.com'
       }, () => {});
     });
   });
