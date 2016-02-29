@@ -2,7 +2,10 @@
 
 let should = require('should'),
   Job = require('../../../lib/models/job'),
-  mockCouch = require('mock-couch');
+  mockCouch = require('mock-couch'),
+  topsites = require('moz-data-site-toplists');
+
+topsites.enableTestMode();
 
 describe('job', () => {
   let couchdb, job;
@@ -44,9 +47,11 @@ describe('job', () => {
 
     it('should update job with results', (done) => {
       couchdb.on('PUT', (data) => {
-
         data.doc.jobDetails.should.be.eql({
-          engine : 'gecko'
+          engine : 'gecko',
+          targetURI : 'http://test.example.com',
+          domain : "example.com",
+          tags : []
         });
         data.doc.jobResults.resources.should.be.eql({
             something : 'test'
@@ -68,7 +73,7 @@ describe('job', () => {
         done();
       });
 
-      job.updateWithResult('correctJobId', {
+      job.updateWithResult('correctJobId', {targetURI : 'http://test.example.com', engine : 'gecko'}, {
         resources : {
           something : 'test'
         },
@@ -144,13 +149,17 @@ describe('job', () => {
         data.doc.jobId.should.be.equal('someJobId');
         data.doc.runNumber.should.be.equal(666);
         data.doc.jobDetails.should.be.eql({
-          engine : 'webkit'
+          engine : 'webkit',
+          targetURI : 'http://test.example.com',
+          domain : 'example.com',
+          tags : []
         });
         done();
       });
 
       job.createNewRun('someJobId', 666, {
-        engine : 'webkit'
+        engine : 'webkit',
+        targetURI:'http://test.example.com'
       }, () => {});
     });
   });

@@ -333,7 +333,13 @@ describe('jobQueue', () => {
             },
             pluginResults : {
               somePlugin : {}
-            }
+            },
+          },
+          jobDetails : {
+            engine : 'gecko',
+            userAgent : 'some gecko ua',
+            screenSize : { width : 1024, height : 1024 },
+            targetURI : 'https://google.com'
           }
         });
 

@@ -30,9 +30,11 @@
     "request": "^2.65.0",
     "statsd-client": "^0.2.1",
     "sugar": "^1.4.1",
+    "tldextract": "^0.0.4",
     "useragent": "^2.1.8",
     "valid-url": "^1.0.9",
-    "yargs": "^3.29.0"
+    "yargs": "^3.29.0",
+    "moz-data-site-toplists": "^1.0.1"
   },
   "devDependencies": {
     "mocha": "^2.3.3",
@@ -40,5 +42,6 @@
     "mockery": "^1.4.0",
     "nock": "^2.15.0",
     "should": "^7.1.1"
-  }
+  },
+  "repository": "https://github.com/mozilla/compatipede"
 }

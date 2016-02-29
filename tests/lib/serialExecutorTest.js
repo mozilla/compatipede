@@ -275,7 +275,7 @@ describe('serialExecutor', () => {
         }]);
       };
 
-      jobModel.updateWithResult = (id, result, callback) => {
+      jobModel.updateWithResult = (id, details, result, callback) => {
         callback();
       };
 
@@ -334,7 +334,7 @@ describe('serialExecutor', () => {
 
     it('should update job with results if execution suceeded', (done) => {
       let calledWith = [];
-      jobModel.updateWithResult = (id, result, cb) => {
+      jobModel.updateWithResult = (id, details, result, cb) => {
         calledWith.push({
           id     : id,
           result : result

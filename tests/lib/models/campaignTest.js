@@ -2,7 +2,10 @@
 
 let Campaign = require('../../../lib/models/campaign'),
   should = require('should'),
-  mockCouch = require('mock-couch');
+  mockCouch = require('mock-couch'),
+  topsites = require('moz-data-site-toplists');
+
+topsites.enableTestMode();
 
 describe('campaign', () => {
   let couchdb, campaign;
@@ -58,6 +61,8 @@ describe('campaign', () => {
         doc.runCount.should.be.equal(0);
         doc.details.should.be.eql({
           targetURI  : 'https://google.com',
+          domain     : 'google.com',
+          tags       : [ '1000', 'us50' ],
           type       : 'mobile',
           userAgents : ['someUserAgentFromBug'],
           engines    : ['gecko']
@@ -69,7 +74,6 @@ describe('campaign', () => {
         });
         done();
       });
-
       campaign.addFromGithub(githubIssue, () => {});
     });
 
