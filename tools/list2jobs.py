@@ -120,7 +120,7 @@ for url in urllist:
                 resolution = get_resolution(platform)
                 couchdoc = {
                    "_id": ("%s-%s-%s-%s-%s-%i" % (domain, filename, engine, platform, ua.replace(' ', ''), urlcount)).lower(),
-                   "status": "open",
+                   "status": "new",
                    "created": datetime.isoformat(datetime.now()),
                    "autoTests": [
                    ],
