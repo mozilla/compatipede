@@ -22,7 +22,7 @@ describe('job', () => {
         password : 'test'
       },
       heartbeatInterval : 100
-    }, 'compatipede-job');
+    }, 'compatipede-job', true);
     job.on('error', () => {});
   });
 
@@ -84,6 +84,32 @@ describe('job', () => {
           consoleLog : []
         },
         screenshot : 'test image png'
+      }, (error) => {
+        should.not.exist(error);
+      });
+    });
+
+    it('Should respect saveResources=no', (done) => {
+      let job_nosave = new Job({
+        host : 'localhost',
+        port : 5999,
+        auth : {
+          username : 'couch',
+          password : 'test'
+        },
+        heartbeatInterval : 100
+      }, 'compatipede-job', false);
+      job.on('error', () => {});
+
+      couchdb.on('PUT', (data) => {
+        data.doc.jobResults.resources.should.be.eql({});
+        done();
+      });
+
+      job_nosave.updateWithResult('correctJobId', {
+        resources : {
+          something : 'test'
+        }
       }, (error) => {
         should.not.exist(error);
       });
