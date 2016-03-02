@@ -33,12 +33,27 @@ let argv = require('yargs')
   .default('jobsDb', 'compatipede-jobs')
   .describe('jobsDb', 'Database for jobs and their results')
 
+  .demand('emailDb')
+  .default('emailDb', 'compatipede-emails')
+  .describe('emailDb', 'From where recipients for execution reports are taken')
+
+  .demand('smtpString')
+  .describe('smtpString', 'SMTP connection string something like smtp[s]://<user>:<password>@<server>[:<port>]')
+
+  .demand('emailFrom')
+  .describe('emailFrom', 'From email address')
+
   .demand('processId')
   .describe('processId', 'Process id used when allocating campaigns')
 
   .demand('interval')
   .describe('interval', 'Interval how often compatipede is run')
   .choices('interval', ['1w', '1d', '1h', '6h', '12h'])
+
+  .demand('saveResources')
+  .describe('saveResources', 'Determine if the source code (HTML) and/or HTTP headers of files received will be saved')
+  .choices('saveResources', ['yes', 'no'])
+  .default('saveResources', 'yes')
 
   .help('h')
   .alias('h', 'help')

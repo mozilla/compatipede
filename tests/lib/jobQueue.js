@@ -3,7 +3,13 @@
 let JobQueue = require('../../lib/jobQueue'),
   should = require('should'),
   nock = require('nock'),
-  BoarClient = require('../../node_modules/jannah-client/node_modules/boar-client');
+  BoarClient;
+
+  try {
+    BoarClient = require('../../node_modules/jannah-client/node_modules/boar-client');
+  } catch(e) {
+    BoarClient = require('boar-client');
+  }
 
 describe('jobQueue', () => {
   let jobQueue, jobDetails, jobObject;
@@ -14,7 +20,7 @@ describe('jobQueue', () => {
 
   after(() => {
     nock.enableNetConnect();
-    nock.cleanAll();
+    // nock.cleanAll();
   });
 
   beforeEach(() => {
@@ -299,7 +305,9 @@ describe('jobQueue', () => {
         pluginRequest = nock('http://hub:9999')
           .post('/getPluginResults')
           .reply(200, {
-            somePlugin : {}
+            results : {
+              somePlugin : {}
+            }
           });
 
 
@@ -325,7 +333,13 @@ describe('jobQueue', () => {
             },
             pluginResults : {
               somePlugin : {}
-            }
+            },
+          },
+          jobDetails : {
+            engine : 'gecko',
+            userAgent : 'some gecko ua',
+            screenSize : { width : 1024, height : 1024 },
+            targetURI : 'https://google.com'
           }
         });
 

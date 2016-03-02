@@ -18,7 +18,7 @@ describe('serialExecutor', () => {
         username : 'couch',
         password : 'test'
       }
-    }, 'compatipede-jobs');
+    }, 'compatipede-jobs', true);
 
     campaignModel = new CampaignModel({
       host : 'localhost',
@@ -35,6 +35,7 @@ describe('serialExecutor', () => {
     tabSequence = new TabSequence('http://master:6666');
 
     serialExecutor = new SerialExecutor('someProcessId', jobModel, campaignModel, tabSequence);
+    serialExecutor._accumulator.someId = {};
   });
 
   describe('set runTime', () => {
@@ -198,7 +199,7 @@ describe('serialExecutor', () => {
         };
 
         callback(null, {
-          _id : 'campaignId'
+          _id : 'someId'
         });
       };
 
@@ -274,7 +275,7 @@ describe('serialExecutor', () => {
         }]);
       };
 
-      jobModel.updateWithResult = (id, result, callback) => {
+      jobModel.updateWithResult = (id, details, result, callback) => {
         callback();
       };
 
@@ -291,13 +292,13 @@ describe('serialExecutor', () => {
 
     it('should fetch all jobs for given campaign', (done) => {
       jobModel.getForCampaignExecution = (campaignId, runNumber, callback) => {
-        campaignId.should.be.equal('campaignId');
+        campaignId.should.be.equal('someId');
         runNumber.should.be.equal(13);
         callback.should.be.a.Function();
         done();
       };
 
-      serialExecutor._executeJobs('campaignId', 13, ()=>{});
+      serialExecutor._executeJobs('someId', 13, ()=>{});
     });
 
     it('should execute all jobs against boar', (done) => {
@@ -312,7 +313,7 @@ describe('serialExecutor', () => {
         callback(null, {success: true});
       };
 
-      serialExecutor._executeJobs('campaignId', 13, () => {
+      serialExecutor._executeJobs('someId', 13, () => {
         calledWith.length.should.be.equal(2);
         calledWith.should.containEql({
           id : 'someId1',
@@ -333,7 +334,7 @@ describe('serialExecutor', () => {
 
     it('should update job with results if execution suceeded', (done) => {
       let calledWith = [];
-      jobModel.updateWithResult = (id, result, cb) => {
+      jobModel.updateWithResult = (id, details, result, cb) => {
         calledWith.push({
           id     : id,
           result : result
@@ -342,7 +343,7 @@ describe('serialExecutor', () => {
         cb();
       };
 
-       serialExecutor._executeJobs('campaignId', 13, () => {
+       serialExecutor._executeJobs('someId', 13, () => {
         calledWith.length.should.be.equal(2);
         calledWith.should.containEql({
           id : 'someId1',
@@ -381,7 +382,7 @@ describe('serialExecutor', () => {
         cb();
       };
 
-       serialExecutor._executeJobs('campaignId', 13, () => {
+       serialExecutor._executeJobs('someId', 13, () => {
         calledWith.length.should.be.equal(2);
         calledWith.should.containEql({
           id : 'someId1',

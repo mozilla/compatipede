@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test node_modules/.bin/mocha --harmony --recursive tests"
+    "test": "NODE_ENV=test node_modules/.bin/mocha --harmony --recursive tests",
+	"deploy": "./bin/deploy.sh"
   },
   "bin": {
     "conductor": "bin/conductor",
@@ -21,15 +22,19 @@
     "cradle": "^0.6.9",
     "deelogger": "git+https://dainist@bitbucket.org/dainist/deeloger.git",
     "github": "^0.2.4",
+    "handlebars": "^4.0.5",
     "image-ms-ssim": "^0.2.0",
     "jannah-client": "asynchq/jannah-client",
     "node-uuid": "^1.4.3",
+    "nodemailer": "^2.0.0",
     "request": "^2.65.0",
     "statsd-client": "^0.2.1",
     "sugar": "^1.4.1",
+    "tldextract": "^0.0.4",
     "useragent": "^2.1.8",
     "valid-url": "^1.0.9",
-    "yargs": "^3.29.0"
+    "yargs": "^3.29.0",
+    "moz-data-site-toplists": "^1.0.1"
   },
   "devDependencies": {
     "mocha": "^2.3.3",
@@ -37,5 +42,6 @@
     "mockery": "^1.4.0",
     "nock": "^2.15.0",
     "should": "^7.1.1"
-  }
+  },
+  "repository": "https://github.com/mozilla/compatipede"
 }
