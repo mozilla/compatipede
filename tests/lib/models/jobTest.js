@@ -107,6 +107,8 @@ describe('job', () => {
       });
 
       job_nosave.updateWithResult('correctJobId', {
+        targetURI : 'http://test.com'
+      }, {
         resources : {
           something : 'test'
         }
