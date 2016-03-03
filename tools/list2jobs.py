@@ -141,7 +141,11 @@ for url in urllist:
                    "runStatus": ""
                 }
                 # print(couchdoc)
-                server[args['database']].save(couchdoc)
-                jobcount += 1
+                try:
+                    server[args['database']].save(couchdoc)
+                    jobcount += 1
+                except Exception,e:
+                    print('Not adding %s, TODO: update query' % url)
+                    pass
                 
 print('Done. Created %i Compatipede jobs from %i URLs' % (jobcount, urlcount))
