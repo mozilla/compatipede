@@ -55,6 +55,11 @@ let argv = require('yargs')
   .choices('saveResources', ['yes', 'no'])
   .default('saveResources', 'yes')
 
+  .demand('syncFromGithub')
+  .describe('syncFromGithub', 'Sync this campaign DB with the state of webcompat.com issues and the URLs these are reported for')
+  .choices('syncFromGithub', ['yes', 'no'])
+  .default('syncFromGithub', 'yes')
+
   .help('h')
   .alias('h', 'help')
 
