@@ -30,7 +30,7 @@ parser.add_argument("--couchdbUser", dest='dbuser', type=str, help="User name fo
 parser.add_argument("--couchdbPassword", dest='dbpass', type=str, help="CouchDB password", required=True)
 parser.add_argument("--couchdbHost", dest='dbhost', type=str, help="CouchDB server name", default="localhost")
 parser.add_argument("--couchdbPort", dest='dbport', type=int, help="CouchDB port", default=5984)
-parser.add_argument("--couchdbDB", dest='database', type=str, help="CouchDB database", default='compatipede-adhoc-jobs')
+parser.add_argument("--couchdbDB", dest='database', type=str, help="CouchDB database", default='compatipede-extra-campaigns')
 parser.add_argument("--engine", dest="engines", type=str, action=UniqueListAction, help="Which rendering engine(s) to test", choices=["gecko", "webkit"], default=["gecko"])
 parser.add_argument("--platform", dest="platforms", type=str, action=UniqueListAction, help="Which type of platform the issue is tested on", choices=["mobile", "desktop", "tablet"], default=["mobile"])
 parser.add_argument("--tag", dest="tags", type=str, action="append", help="""One or more tags classifying site according to locale and popularity. 
@@ -47,26 +47,6 @@ print(args)
 newlinerx = re.compile('\r?\n')
 
 server = couchdb.client.Server(url='http://%s:%s@%s:%i' % (args['dbuser'], args['dbpass'], args['dbhost'], args['dbport']))
-
-def get_resolution(platform):
-    # Screen size defaults
-    if platform == 'mobile':
-        screenSize = {
-               "width": 480,
-               "height": 640
-           }
-    elif platform == 'desktop':
-        screenSize = {
-               "width": 1366,
-               "height": 768
-           }
-    elif platform == 'tablet':
-        screenSize = {  # HiDPI stuff here, obviously. Should we run with lower defaults if we can't fake pixel density?
-               "width": 2048,
-               "height": 1536
-           }
-           
-    return screenSize
 
 if os.path.isfile(args['file']):
     # get data from file
@@ -100,33 +80,19 @@ urlcount = 0;
 jobcount = 0;
 
 if args['database'] not in server:
-    db = server.create(args['database'])
-
-    db['_design/jannahJobs'] = {
-      "views": {
-        "newJobs": {  # for fetching jobs with status new
-          "map" : "function(doc) {\n            if(doc.status === 'new') {\n              emit(doc.status, doc);\n            }\n          }"
-        },
-        "completedJobs" : {
-          "map" : "function(doc) {\n            if(doc.status === 'completed') {\n              emit(doc.status, doc);\n            }\n          }"
-        },
-        "failedJobs" : {
-          "map" : "function(doc) {\n            if(doc.status === 'failed') {\n              emit(doc.status, doc);\n            }\n          }"
-        },
-        "byCampaign" : {
-          "map" : "function(doc) {\n            if(doc.jobId) {\n              emit([doc.jobId, doc.runNumber], doc);\n            }\n          }"
-        },
-        "byCampaignDocId" : {
-          "map" : "function(doc) {\n            if(doc.jobId) {\n              emit([doc.jobId, doc.runNumber], doc._id);\n            }\n          }"
+    server.create(args['database'])
+    server[args['database']]['_design/campaigns'] = { 
+        "views": {
+            "byStatus" : {
+                "map" : "function(doc) {\n    if(doc.status) {\n        emit(doc.status, doc);\n    }\n}"
+            },
+            "openCampaignsByLastRun" : {
+                "map" : "function(doc) {\n    if(doc.status === 'open' && doc.runStatus !== 'running') {\n        emit(doc.lastRun || 0, doc);\n    }\n}"
+            }
         }
-      },
-      "filters" : {
-        "newJobs" : "function(doc) { //for _change listener\n          return doc.status === 'new';\n        }"
-      }
     }
 
-else:
-    db = server[args['database']]
+db = server[args['database']]
 
 for url in urllist:
     urlcount += 1
@@ -144,27 +110,31 @@ for url in urllist:
         domain = '.'.join(parts[1:3])
 
     # So, we're ready to gather up the data to post it to the db:
-    for ua in args['uas']:
-        for engine in args['engines']:
-            for platform in args['platforms']:
-                resolution = get_resolution(platform)
-                couchdoc = {
-                   "_id": ("%s-%s-%s-%s-%s-%i" % (domain, filename, engine, platform, ua.replace(' ', ''), urlcount)).lower(),
-                   "status": "new",
-                   "created": datetime.isoformat(datetime.now()),
-                   "jobDetails": {
-                       "targetURI": url,
-                       "type": platform,
-                       "domain": domain,
-                       "tags": tags,
-                       "userAgent": ua,
-                       "engine": engine,
-                       "screenSize": resolution
-                   },
-                }
-                # print(couchdoc)
-                db[couchdoc['_id']] = couchdoc;
-                jobcount += 1
+    for platform in args['platforms']:
+        couchdoc = {
+           "_id": ("%s-%s-%s-%i" % (domain, filename, platform, urlcount)).lower(),
+           "autoTestable": True,
+           "autoTests": [],
+           "status": "open",
+           "created": datetime.isoformat(datetime.now()),
+           "details": {
+               "targetURI": url,
+               "type": platform,
+               "domain": domain,
+               "tags": tags,
+               "userAgents": args['uas'],
+               "engines": args['engines'],
+           },
+           "from": args['file'],
+           "runCount": 0,
+           "processId": 5001,
+           "lastRun": 0,
+           "runStatus": ""
+        }
+        # print(couchdoc)
+            
+        db[couchdoc['_id']] = couchdoc;
+        jobcount += 1
 
                 
-print('Done. Created (or updated) %i Compatipede jobs from %i URLs' % (jobcount, urlcount))
+print('Done. Created %i Compatipede campaigns from %i URLs' % (jobcount, urlcount))
