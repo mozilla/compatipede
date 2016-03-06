@@ -1,0 +1,56 @@
+td.screencapcell div{
+	width: 150px;
+	height: 300px;
+	overflow: hidden;
+	text-align: center;
+	position: relative;
+}
+
+td.screencapcell div figure{
+	margin: 1px;
+}
+
+td img.screencapture{
+	max-width:98%
+}
+
+figure:focus, figure:active{
+	border: 3px outset yellow;
+}
+
+figure.selected{
+	border: 4px outset blue;
+}
+
+figure figcaption{
+	display: none;
+	font-size: smaller;
+	font-variant: italic
+}
+
+figure:focus figcaption, figure:active figcaption{
+	display: block;
+	margin-top: -2em;
+	background: #fff;
+	color: #000;
+	opacity: .8;
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+}
+
+.overlay-img-background{
+	position: fixed;
+	left: 0; top: 0; bottom: 0; right: 0;
+	background: #000;
+	opacity: .7;
+}
+.overlay-img-comparison{
+	position: absolute;
+	background: #fff;
+	left: 20%;
+	right: 20%;
+	top: 0;
+	text-align: center;
+}
