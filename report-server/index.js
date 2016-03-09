@@ -39,7 +39,7 @@ http.createServer(function (req, http_res) {
         response = '<!DOCTYPE html><html><head><title>Compatipede data reports</title>\n';
         response += '<link href="/css/style.css" rel="stylesheet">\n';
         response += '<script src="/js/resemble.js"></script><script src="/js/ui.js"></script></head>\n';
-        response += '<body><p>Compatipede data reports to appear here</p></body></html>';
+        response += '<body><h1>Compatipede data reports</h1><div id="controls"></div></body></html>';
         http_res.end(response);
       }else if('attachment' in queryObject) {
         // GET /?attachment=X&doc=Y  "attachment id x"

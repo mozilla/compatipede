@@ -1,8 +1,8 @@
 /*
 * UI for ad-hoc comparison of Compatipede screenshots and data
 * Sets up a grid showing screenshots
-* X axis is domains
-* Y axis is variants (mainly engine+ua combos)
+* X axis is variants (mainly engine+ua combos)
+* Y axis is domains
 * DnD - based: drop one screenshot on another to get a comparison of the screenshots and associated data
 * Alternate UI: shift focus by arrows, use space to select for comparison. Second space executes comparison
 * Framework? Isn't vanilla OK?
@@ -10,9 +10,14 @@
 */
 
 // Get a list of domains. Let's do 10 at a time - so /?domains=0-10
+
+// TODO: keyboard functionality: arrow should skip over empty cells
+// TODO: data diff'ing
+
 (function(){
-  var skip = 2;
-  var limit = 15;
+  var skip = 0;
+  var limit = 10;
+  var atOnce = 10;
   var grid, tbody, headerRow;
   document.addEventListener('DOMContentLoaded', function(){
     // first thing to do is to set up the grid..
@@ -22,7 +27,39 @@
     // At this point we don't know how many rows and columns we want
     // We do however know we want one header column with THs for the domains
     headerRow = tbody.appendChild(document.createElement('tr')); // can't use THEAD, didn't render correctly..?
-    
+    headerRow.appendChild(document.createElement('td')); // Empty cell above the site domain name column
+    start();
+    // controls for paging
+    var controlsDiv = document.getElementById('controls');
+    var prevBtn = controlsDiv.appendChild(document.createElement('button'));
+    var nextBtn = controlsDiv.appendChild(document.createElement('button'));
+    prevBtn.type = nextBtn.type = 'button';
+    prevBtn.appendChild(document.createTextNode('<<'));
+    nextBtn.appendChild(document.createTextNode('>>'));
+    prevBtn.onclick = nextBtn.onclick = function(e){
+      if(e.target === prevBtn){
+        skip -= atOnce;
+        limit -= atOnce;
+        if(skip < 0) {
+          skip = 0;
+          limit = atOnce;
+          prevBtn.disabled = true;
+          nextBtn.disabled = false;
+        }
+      }else if(e.target === nextBtn) {
+        skip += atOnce;
+        limit += atOnce;
+        prevBtn.disabled = false;
+        // TODO: do we know when to stop??
+      }
+      start();
+    }
+  }, false);
+  
+  function start() {
+    while(grid.rows.length > 1) {
+      tbody.removeChild(grid.rows[grid.rows.length-1]);
+    }
     // Start piling up the requests and callbacks..
     listDomains(skip, limit, function(){
       this.response.forEach(function(obj){
@@ -33,8 +70,8 @@
         });
       });
     });
-  }, false);
-  
+  }
+
   // keyboard usage
   document.addEventListener('keydown', function(e){
     if(e.keyCode === 32) { // space toggles "selected"
@@ -88,22 +125,22 @@
   }, false);
   
   // The comparison fun..
-  var dragElm, dragIdx
+  var dragElm, dragSite
   document.addEventListener('drag', function(e){
     dragElm = e.target.tagName === 'IMG' && e.target.classList.contains('screencapture') ? e.target.parentElement : e.target;
-    dragIdx = dragElm.getAttribute('data-cellidx');
+    dragSite = dragElm.getAttribute('data-site');
   }, false);
   document.addEventListener('dragover', function(e){
     // Prevent default to *allow* drop.. only if we're over a figure with same index
     var nowOver = e.target.tagName === 'IMG' && e.target.classList.contains('screencapture') ? e.target.parentElement : e.target;
-    if(dragIdx == nowOver.getAttribute('data-cellidx')) {
+    if(dragSite == nowOver.getAttribute('data-site')) {
       e.preventDefault();
     }
   }, false);
   document.addEventListener('drop', function(e){
     compareImgs(e.target.src||e.target.getElementsByTagName('img')[0].src, dragElm.getElementsByTagName('img')[0].src);
     e.preventDefault();
-    dragIdx = dragElm = null;
+    dragSite = dragElm = null;
   }, false);
   
   function compareImgs(img1, img2){
@@ -118,51 +155,50 @@
     div = document.body.appendChild(document.createElement('div'));
     div.className = 'overlay-img-comparison';
     div.style.left = (document.documentElement.scrollLeft + (screen.width*20/100)) + 'px';
+    div.style.top = (document.documentElement.scrollTop + (screen.height*5/100)) + 'px';
     div.appendChild(diffImage);
   }
   
   function addScreenshotsToGrid(doc){
     var id = doc.id;
-    var key = doc.key;
+    var key = doc.key; // this is actually the domain name here
     doc = doc.value;
     // this is where it gets a little tricky:
-    // do we have a row for this variant yet?
+    // do we have a row for this site yet, or a column for this variant?
     // let's define "variantID" as 
     // doc.jobDetails.domain + engine + type + userAgent 
     var variantID = doc.jobDetails.engine + doc.jobDetails.type + doc.jobDetails.userAgent;
     variantID = variantID.toLowerCase().replace(/[^a-z0-9_]+/g, '');
-    var row = document.getElementById(variantID);
-    if(!row) {
-      row = addVariantIDRow(variantID);
+    var columnHeader = document.getElementById(variantID);
+    if(!columnHeader) {
+      columnHeader = addVariantIDColumn(variantID);
     }
-    // Now, we shall now assume that documents are always returned in the same order
-    // We need to find the index of the header cell for this domain,
-    // and if none exist insert one
+    // Now, we shall not assume that documents are always returned in the same order
+    // We need to find the row for this domain, and if none exist insert one
+    var siteRow = document.getElementById(key);
+    if(!siteRow) {
+      siteRow = tbody.appendChild(document.createElement('tr'));
+      siteRow.id = key;
+      siteRow.appendChild(document.createElement('th')).appendChild(document.createTextNode(key));
+      // We just added a nearly empty row, so we need to fill it with cells until the expected length
+      while(siteRow.cells.length < headerRow.cells.length) {
+        siteRow.appendChild(document.createElement('td')).className = 'screencapcell';
+      }
+    }
+    // which index in the header is the current variant?
     var headIndex = -1, cell;
     for(var i = 0; i < headerRow.cells.length; i++) {
-      if(headerRow.cells[i].textContent === key) {
+      if(headerRow.cells[i] === columnHeader) {
         headIndex = i;
         break;
       }
     }
-    if(headIndex === -1) {
-      headerRow.appendChild(document.createElement('th')).textContent = key;
-      headIndex = headerRow.cells.length - 1;
-      // Now, each row must have the same number of cells
-      // We go through them all to add anything missing in case we added another TH
-      for(var j = 1; j < grid.rows.length; j++){
-        while(grid.rows[j].cells.length < headIndex + 1){
-          // we somehow have too few cells in this row, let's add some..
-          cell = grid.rows[j].appendChild(document.createElement('td'));
-          cell.className = 'screencapcell';
-        }
-      }
-    }
+
     // now we're ready to pick the right cell to add our screenshot to
-    cell = row.cells[headIndex];
+    cell = siteRow.cells[headIndex];
     if(!cell) {
       // huh?
-      cell = row.appendChild(document.createElement('td'));
+      cell = siteRow.appendChild(document.createElement('td'));
       cell.className = 'screencapcell';
     }
     if(doc._attachments) {
@@ -174,23 +210,22 @@
       img.src = '/?attachment=' + encodeURIComponent(attachment) + '&doc=' + encodeURIComponent(id);
       fig.tabIndex = 0; // focusable for keyboard navigation
       fig.draggable = true;
-      fig.setAttribute('data-cellidx', headIndex);
+      fig.setAttribute('data-site', key);
       fig.appendChild(document.createElement('figcaption')).appendChild(document.createTextNode(
        key + ' captured ' + doc.jobResults.date + ' rendered by ' + doc.jobDetails.engine + '\n' + doc.jobDetails.userAgent));
       fig.doc = doc;
     }
   }
   
-  function addVariantIDRow(id){
-    var tr = tbody.appendChild(document.createElement('tr'));
-    tr.id = id;
-    // We are going to assume that no other document so far needed this row
-    // meaning we should fill it with empty cells until it's as long as 
-    // the current rows are
-    for(var i = 0; i < headerRow.cells.length - 1; i++){
-      tr.appendChild(document.createElement('td')).className = 'screencapcell';
+  function addVariantIDColumn(id){
+    var th = headerRow.appendChild(document.createElement('th'));
+    th.id = id;
+    // We are going to assume that no other document so far needed this column
+    // meaning we should add one empty cell to each row
+    for(var i = 1; i < grid.rows.length - 1; i++){
+      grid.rows[i].appendChild(document.createElement('td')).className = 'screencapcell';
     }
-    return tr;
+    return th;
   }
   
   function getDocumentsForDomain(domain, cb){
