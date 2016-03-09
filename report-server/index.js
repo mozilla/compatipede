@@ -14,8 +14,8 @@ var argv = require('yargs')
   .argv;
 
 function e500(http_res, msg){
-  res.writeHead(500, 'Internal error');
-  res.end(msg);
+  http_res.writeHead(500, 'Internal error');
+  http_res.end(msg);
 }
 
 http.createServer(function (req, http_res) {
@@ -36,11 +36,15 @@ http.createServer(function (req, http_res) {
       // GET /   Main app HTML (linking to JS and CSS)
       if(req.url === '/') {
         http_res.writeHead(200, {'Content-Type': 'text/html'});
-        response = '<!DOCTYPE html><html><head><title>Compatipede data reports</title>\n';
-        response += '<link href="/css/style.css" rel="stylesheet">\n';
-        response += '<script src="/js/resemble.js"></script><script src="/js/ui.js"></script></head>\n';
-        response += '<body><h1>Compatipede data reports</h1><div id="controls"></div></body></html>';
-        http_res.end(response);
+        http_res.write('<!DOCTYPE html><html><head><title>Compatipede data reports</title>\n');
+        http_res.write('<link href="/css/style.css" rel="stylesheet">\n');
+        http_res.write('<link href="/css/jsondiffpatch/html.css" rel="stylesheet">\n');
+        http_res.write('<script src="/js/resemble.js"></script>');
+        http_res.write('<script src="/js/jsondiffpatch/jsondiffpatch.js"></script>');
+        http_res.write('<script src="/js/jsondiffpatch/jsondiffpatch-formatters.js"></script>');
+        http_res.write('<script src="/js/ui.js"></script></head>\n');
+        http_res.end('<body><h1>Compatipede data reports</h1><div id="controls"></div></body></html>');
+
       }else if('attachment' in queryObject) {
         // GET /?attachment=X&doc=Y  "attachment id x"
         db.getAttachment(queryObject.doc, queryObject.attachment, function(dberr, data){

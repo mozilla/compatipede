@@ -125,7 +125,7 @@
   }, false);
   
   // The comparison fun..
-  var dragElm, dragSite
+  var dragElm, dragSite; // set when drag starts: dragElm is the <figure> we drag, dragSite is relevant domain name
   document.addEventListener('drag', function(e){
     dragElm = e.target.tagName === 'IMG' && e.target.classList.contains('screencapture') ? e.target.parentElement : e.target;
     dragSite = dragElm.getAttribute('data-site');
@@ -138,11 +138,27 @@
     }
   }, false);
   document.addEventListener('drop', function(e){
-    compareImgs(e.target.src||e.target.getElementsByTagName('img')[0].src, dragElm.getElementsByTagName('img')[0].src);
+    var dropTarget = (e.target.tagName === 'IMG' && e.target.classList.contains('screencapture')) ? e.target.parentElement : e.target;
+    // dropTarget should be set to the <figure> element
+    compareStuff(dropTarget, dragElm);
     e.preventDefault();
     dragSite = dragElm = null;
   }, false);
   
+  function compareStuff(elm1, elm2){ // expects figure elements with .doc data
+    // launches the image comparison for the IMG inside the FIGURE elements
+    compareImgs(elm1.getElementsByTagName('img')[0].src, elm2.getElementsByTagName('img')[0].src);
+    var delta = jsondiffpatch.diff(elm1.doc.jobResults, elm2.doc.jobResults);
+    // TODO: find a nicer way...
+    var interval = setInterval(function(){
+      if(document.getElementsByClassName('overlay-img-comparison')[0]) {
+        document.getElementsByClassName('overlay-img-comparison')[0].appendChild(document.createElement('div')).innerHTML = jsondiffpatch.formatters.html.format(delta, elm1.doc);
+        clearInterval(interval);
+      }
+    }, 200);
+  }
+
+
   function compareImgs(img1, img2){
     resemble(img1).compareTo(img2).onComplete(showComparison);
   }

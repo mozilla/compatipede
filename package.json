@@ -25,6 +25,7 @@
     "handlebars": "^4.0.5",
     "image-ms-ssim": "^0.2.0",
     "jannah-client": "asynchq/jannah-client",
+    "jsondiffpatch": "^0.1.41",
     "moz-data-site-toplists": "^1.0.1",
     "node-uuid": "^1.4.3",
     "nodemailer": "^2.0.0",
