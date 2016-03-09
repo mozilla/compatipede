@@ -4,6 +4,15 @@ var url = require('url');
 
 var fileserver = new(node_static.Server)('./static/');
 
+var argv = require('yargs')
+  .demand('couchdbUser')
+  .describe('couchdbUser', 'Couchdb username')
+
+  .demand('couchdbPassword')
+  .describe('couchdbPassword', 'Couchdb password')
+
+  .argv;
+
 function e500(http_res, msg){
   res.writeHead(500, 'Internal error');
   res.end(msg);
@@ -13,14 +22,13 @@ http.createServer(function (req, http_res) {
   console.log(req.method + ' ' + req.url);
   fileserver.serve(req, http_res, function(err, result){
     if(err) { // The request is not for a static file
-      console.log(err);
       var response = '';
       var queryObject = url.parse(req.url,true).query;
       console.log(queryObject);
       
       var cradle = require('cradle');
       var connection = new(cradle.Connection)('http://localhost', 5984, {
-          auth: { username: '', password: '' }
+          auth: { username: argv.couchdbUser, password: argv.couchdbPassword }
       });
       var db = connection.database('compatipede-adhoc-jobs');
       
