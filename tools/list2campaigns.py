@@ -30,7 +30,8 @@ parser.add_argument("--couchdbUser", dest='dbuser', type=str, help="User name fo
 parser.add_argument("--couchdbPassword", dest='dbpass', type=str, help="CouchDB password", required=True)
 parser.add_argument("--couchdbHost", dest='dbhost', type=str, help="CouchDB server name", default="localhost")
 parser.add_argument("--couchdbPort", dest='dbport', type=int, help="CouchDB port", default=5984)
-parser.add_argument("--couchdbDB", dest='database', type=str, help="CouchDB database", default='compatipede-extra-campaigns')
+parser.add_argument("--couchdbDB", dest='database', type=str, help="CouchDB database for campaign", default='compatipede-extra-campaigns')
+parser.add_argument("--couchdbJobsDB", dest='jobsdatabase', type=str, help="CouchDB database for generated jobs", default='compatipede-extra-jobs')
 parser.add_argument("--engine", dest="engines", type=str, action=UniqueListAction, help="Which rendering engine(s) to test", choices=["gecko", "webkit"], default=["gecko"])
 parser.add_argument("--platform", dest="platforms", type=str, action=UniqueListAction, help="Which type of platform the issue is tested on", choices=["mobile", "desktop", "tablet"], default=["mobile"])
 parser.add_argument("--tag", dest="tags", type=str, action="append", help="""One or more tags classifying site according to locale and popularity. 
@@ -88,11 +89,45 @@ if args['database'] not in server:
             },
             "openCampaignsByLastRun" : {
                 "map" : "function(doc) {\n    if(doc.status === 'open' && doc.runStatus !== 'running') {\n        emit(doc.lastRun || 0, doc);\n    }\n}"
+            },
+            "byDomain": {
+              "map" : "function(doc) {\n              emit(doc.details.domain, doc);\n            }\n          }"
             }
         }
     }
 
 db = server[args['database']]
+
+if args['jobsdatabase'] not in server:
+    jdb = server.create(args['jobsdatabase'])
+
+    jdb['_design/jannahJobs'] = {
+      "views": {
+        "newJobs": {  # for fetching jobs with status new
+          "map" : "function(doc) {\n            if(doc.status === 'new') {\n              emit(doc.status, doc);\n            }\n          }"
+        },
+        "completedJobs" : {
+          "map" : "function(doc) {\n            if(doc.status === 'completed') {\n              emit(doc.status, doc);\n            }\n          }"
+        },
+        "failedJobs" : {
+          "map" : "function(doc) {\n            if(doc.status === 'failed') {\n              emit(doc.status, doc);\n            }\n          }"
+        },
+        "byCampaign" : {
+          "map" : "function(doc) {\n            if(doc.jobId) {\n              emit([doc.jobId, doc.runNumber], doc);\n            }\n          }"
+        },
+        "byCampaignDocId" : {
+          "map" : "function(doc) {\n            if(doc.jobId) {\n              emit([doc.jobId, doc.runNumber], doc._id);\n            }\n          }"
+        },
+        "byDomain": {
+          "map" : "function(doc) {\n              emit(doc.jobDetails.domain, doc);\n            }\n          }"
+        }
+      },
+      "filters" : {
+        "newJobs" : "function(doc) { //for _change listener\n          return doc.status === 'new';\n        }"
+      }
+    }
+
+
 
 for url in urllist:
     urlcount += 1
