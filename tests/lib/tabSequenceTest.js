@@ -253,6 +253,15 @@ describe('tabSequence', () => {
             redirects : {
               something : 'to somewhere'
             }
+          },
+          "jobDetails": {
+              "engine": "gecko",
+              "userAgent": "some gecko ua",
+              "screenSize": {
+                  "width": 1024,
+                  "height": 1024
+              },
+              "targetURI": "https://google.com"
           }
         });
 
