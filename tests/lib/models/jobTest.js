@@ -73,12 +73,8 @@ describe('job', () => {
         resources : {
           something : 'test'
         },
-        consoleLog : {
-          consoleLog : []
-        },
-        errorLog : {
-          consoleLog : []
-        },
+        consoleLog : [],
+        errorLog : [],
         screenshot : 'test image png'
       }, (error) => {
         should.not.exist(error);
