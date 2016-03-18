@@ -11,8 +11,7 @@
 
 // Get a list of domains. Let's do 10 at a time - so /?domains=0-10
 
-// TODO: keyboard functionality: arrow should skip over empty cells
-// TODO: data diff'ing
+// TODO: expose information on -webkit- styling on screenshot (per coordinates)
 
 (function(){
   var skip = 0;
@@ -163,7 +162,6 @@
     e.preventDefault();
     dragSite = dragElm = null;
   }, false);
-
   document.addEventListener('scroll', function(e){
     // If the focused element is off-screen, blur it
     // otherwise using arrow keys when some off-screen element has focus will jump to a surprising place
@@ -182,15 +180,12 @@
 
   function compareStuff(elm1, elm2){ // expects figure elements with .doc data
     // launches the image comparison for the IMG inside the FIGURE elements
-    compareImgs(elm1.getElementsByTagName('img')[0].src, elm2.getElementsByTagName('img')[0].src);
-    var delta = jsondiffpatch.diff(elm1.doc.jobResults, elm2.doc.jobResults);
-    // TODO: find a nicer way...
-    var interval = setInterval(function(){
-      if(document.getElementsByClassName('overlay-img-comparison')[0]) {
-        document.getElementsByClassName('overlay-img-comparison')[0].appendChild(document.createElement('div')).innerHTML = jsondiffpatch.formatters.html.format(delta, elm1.doc);
-        clearInterval(interval);
-      }
-    }, 200);
+    compareImgs(elm1.getElementsByTagName('img')[0].src, elm2.getElementsByTagName('img')[0].src, function(elm){
+      var delta = jsondiffpatch.diff(elm1.doc.jobResults, elm2.doc.jobResults);
+      addCssInfo(elm, elm1.doc);
+      addCssInfo(elm, elm2.doc);
+      elm.appendChild(document.createElement('div')).innerHTML = jsondiffpatch.formatters.html.format(delta, elm1.doc);
+    });
   }
 
   function enlarge(target){
@@ -202,15 +197,46 @@
     if(img && img.tagName === 'IMG') {
       var elm = showOverlay(img.cloneNode(true));
       if(img.parentElement.doc) {
+        addCssInfo(elm, img.parentElement.doc);
       }
     }
   }
 
-
-  function compareImgs(img1, img2){
-    resemble(img1).compareTo(img2).onComplete(showComparison);
+  function addCssInfo(elm, doc){ // elm is the "lightbox" DIV
+    var img = elm.getElementsByTagName('img')[0];
+    var scale = img.width / img.naturalWidth; // used to calculate "real" positions and sizes
+    // Annotate screenshot with detected CSS issues
+    if(doc.jobResults.plugins['css-analyzer']) {
+      for(var issue, i = 0; i < doc.jobResults.plugins['css-analyzer'].length; i++) {
+        issue = doc.jobResults.plugins['css-analyzer'][i];
+        // The css-analyzer output array contains these objects:
+        // {coords: {bottom: 91, height: 0, left: 970.25, right: 1007.75, top: 91, width: 37.5}, index: 0,
+        // problems: [{property: "webkitTransform", value: "matrix(1.25, 0, 0, 1.25, 0, 0)"}], selector: "div.icon.icon-search"}
+        if(issue.coords.height && issue.coords.width) {
+          var div = document.createElement('div');
+          div.className = 'note';
+          div.style.left = parseInt(parseInt(issue.coords).left * scale) + 'px';
+          div.style.top = parseInt(parseInt(issue.coords.top) * scale) + 'px';
+          div.style.right = parseInt(parseInt(issue.coords.right) * scale) + 'px';
+          div.style.height = parseInt(parseInt(issue.coords.height) * scale) + 'px';
+          issue.problems.forEach(function(problem){
+            div.appendChild(document.createTextNode(problem.property + ': ' + problem.value + '\n'));
+          });
+          div.title = issue.selector + ', ' + issue.index;
+          elm.appendChild(div);
+          console.log(div.getAttribute('style'));
+        }
+      }
+    }
   }
-  
+
+  function compareImgs(img1, img2, cb){
+    resemble(img1).compareTo(img2).onComplete(function(data){
+      var elm = showComparison(data);
+      cb(elm);
+    });
+  }
+
   function showComparison(data){
     var diffImage = document.createElement('img');
 		diffImage.src = data.getImageDataUrl();
