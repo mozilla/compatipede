@@ -95,7 +95,7 @@
          document.getElementsByClassName('selected')[0].classList.remove('selected');
        }
      }
-    } else if((e.keyCode > 36 && e.keyCode < 41) && !isOverlayOpen) {
+    } else if((e.keyCode > 36 && e.keyCode < 41) && !isOverlayOpen && (['IMG', 'FIGURE'].indexOf(e.target.tagName) > -1)) {
       // Arrow keys. Tricky.. It would be nice to enable focus navigation with arrow keys,
       // but it will interfere with scrolling I suppose..
       var targetRowIdx, targetCellIdx;
