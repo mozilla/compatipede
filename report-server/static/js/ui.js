@@ -159,7 +159,23 @@
     e.preventDefault();
     dragSite = dragElm = null;
   }, false);
-  
+
+  document.addEventListener('scroll', function(e){
+    // If the focused element is off-screen, blur it
+    // otherwise using arrow keys when some off-screen element has focus will jump to a surprising place
+    if(!document.activeElement) return;
+    var doctop = Math.max(document.documentElement.scrollTop, document.body.scrollTop);
+    var elm = document.activeElement;
+    var elmbottom = elm.offsetHeight + elm.offsetTop;
+    while(elm.offsetParent) {
+      elmbottom = elm.offsetParent.offsetTop;
+      elm = elm.offsetParent;
+    }
+    if(elmbottom < doctop || elmbottom - elm.offsetHeight > doctop + window.innerHeight) {
+      elm.blur();
+    }
+  }, false);
+
   function compareStuff(elm1, elm2){ // expects figure elements with .doc data
     // launches the image comparison for the IMG inside the FIGURE elements
     compareImgs(elm1.getElementsByTagName('img')[0].src, elm2.getElementsByTagName('img')[0].src);
