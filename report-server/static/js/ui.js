@@ -108,21 +108,33 @@
           }
         }
       }
-      if(e.keyCode === 37) {
-        targetCellIdx --;
-      } else if(e.keyCode === 38) {
-        targetRowIdx --;
-      } else if(e.keyCode === 39) {
-        targetCellIdx ++;
-      } else if(e.keyCode === 40) {
-        targetRowIdx ++;
-      }
-      if(grid.rows[targetRowIdx] && grid.rows[targetRowIdx].cells[targetCellIdx]) {
-        if(grid.rows[targetRowIdx].cells[targetCellIdx].getElementsByTagName('figure')[0]) {
-          grid.rows[targetRowIdx].cells[targetCellIdx].getElementsByTagName('figure')[0].focus();
-          e.preventDefault();
+      var recalculate = function(){
+        if(e.keyCode === 37) {
+          targetCellIdx --;
+        } else if(e.keyCode === 38) {
+          targetRowIdx --;
+        } else if(e.keyCode === 39) {
+          targetCellIdx ++;
+        } else if(e.keyCode === 40) {
+          targetRowIdx ++;
         }
       }
+      var focusMoved = false;
+      do{ // The do..while loop ensures we skip over empty cells in the table
+        recalculate();
+        if((targetRowIdx >= 1 && targetRowIdx < grid.rows.length) && (targetCellIdx >= 1 && targetCellIdx < grid.rows[targetRowIdx].cells.length)) {
+          if(grid.rows[targetRowIdx] && grid.rows[targetRowIdx].cells[targetCellIdx]) {
+            if(grid.rows[targetRowIdx].cells[targetCellIdx].getElementsByTagName('figure')[0]) {
+              grid.rows[targetRowIdx].cells[targetCellIdx].getElementsByTagName('figure')[0].focus();
+              focusMoved = true;
+              e.preventDefault();
+            }
+          }
+        } else {
+          // out of bounds
+          break;
+        }
+      }while(!focusMoved);
     }
     
   }, false);
