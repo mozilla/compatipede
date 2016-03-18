@@ -95,6 +95,8 @@
          document.getElementsByClassName('selected')[0].classList.remove('selected');
        }
      }
+    } else if(e.keyCode === 13 && ! isOverlayOpen) { // Enter
+      enlarge(e.target);
     } else if((e.keyCode > 36 && e.keyCode < 41) && !isOverlayOpen && (['IMG', 'FIGURE'].indexOf(e.target.tagName) > -1)) {
       // Arrow keys. Tricky.. It would be nice to enable focus navigation with arrow keys,
       // but it will interfere with scrolling I suppose..
@@ -138,7 +140,9 @@
     }
     
   }, false);
-  
+
+  document.addEventListener('dblclick', function(e){enlarge(e.target);}, false);
+
   // The comparison fun..
   var dragElm, dragSite; // set when drag starts: dragElm is the <figure> we drag, dragSite is relevant domain name
   document.addEventListener('drag', function(e){
@@ -187,6 +191,19 @@
         clearInterval(interval);
       }
     }, 200);
+  }
+
+  function enlarge(target){
+    if(target.tagName === 'FIGURE') {
+      var img = target.getElementsByTagName('img')[0];
+    } else {
+      var img = target;
+    }
+    if(img && img.tagName === 'IMG') {
+      var elm = showOverlay(img.cloneNode(true));
+      if(img.parentElement.doc) {
+      }
+    }
   }
 
 
