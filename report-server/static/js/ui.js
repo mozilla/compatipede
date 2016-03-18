@@ -19,6 +19,7 @@
   var limit = 10;
   var atOnce = 10;
   var grid, tbody, headerRow;
+  var isOverlayOpen = false;
   document.addEventListener('DOMContentLoaded', function(){
     // first thing to do is to set up the grid..
     grid = document.body.appendChild(document.createElement('table'));
@@ -37,6 +38,7 @@
     prevBtn.appendChild(document.createTextNode('<<'));
     nextBtn.appendChild(document.createTextNode('>>'));
     prevBtn.onclick = nextBtn.onclick = function(e){
+      if(isOverlayOpen) return;
       if(e.target === prevBtn){
         skip -= atOnce;
         limit -= atOnce;
@@ -79,7 +81,7 @@
         e.target.classList.contains('selected') ? e.target.classList.remove('selected') : e.target.classList.add('selected');
         var sel = document.getElementsByClassName('selected');
         if(sel.length === 2) {
-          compareImgs(sel[0].getElementsByTagName('img')[0].src, sel[1].getElementsByTagName('img')[0].src);
+          compareStuff(sel[0], sel[1]);
         }
         e.preventDefault();
       }
@@ -87,12 +89,13 @@
       if(document.getElementsByClassName('overlay-img-background').length || document.getElementsByClassName('overlay-img-comparison').length) {
         document.body.removeChild(document.getElementsByClassName('overlay-img-background')[0]);
         document.body.removeChild(document.getElementsByClassName('overlay-img-comparison')[0]);
+        isOverlayOpen = false;
       } else {
        while(document.getElementsByClassName('selected').length) {
          document.getElementsByClassName('selected')[0].classList.remove('selected');
        }
      }
-    } else if(e.keyCode > 36 && e.keyCode < 41) {
+    } else if((e.keyCode > 36 && e.keyCode < 41) && !isOverlayOpen) {
       // Arrow keys. Tricky.. It would be nice to enable focus navigation with arrow keys,
       // but it will interfere with scrolling I suppose..
       var targetRowIdx, targetCellIdx;
@@ -166,13 +169,22 @@
   function showComparison(data){
     var diffImage = document.createElement('img');
 		diffImage.src = data.getImageDataUrl();
+    return showOverlay(diffImage);
+  }
+
+  function showOverlay(imgElm){
     var div = document.body.appendChild(document.createElement('div'));
     div.className = 'overlay-img-background';
+    div.title = 'Use [Esc] key to close image view and return to table';
     div = document.body.appendChild(document.createElement('div'));
     div.className = 'overlay-img-comparison';
-    div.style.left = (document.documentElement.scrollLeft + (screen.width*20/100)) + 'px';
-    div.style.top = (document.documentElement.scrollTop + (screen.height*5/100)) + 'px';
-    div.appendChild(diffImage);
+    div.style.height = window.innerHeight + 'px';
+    console.log(div.style.height);
+    div = div.appendChild(document.createElement('div'));
+    div.className = 'overlay-img-comparison-scrollparent';
+    div.appendChild(imgElm);
+    isOverlayOpen = true;
+    return div;
   }
   
   function addScreenshotsToGrid(doc){

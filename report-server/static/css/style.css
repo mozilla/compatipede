@@ -6,6 +6,8 @@ td.screencapcell div{
 	position: relative;
 }
 
+th{vertical-align:top}
+
 td.screencapcell div figure{
 	margin: 1px;
 }
@@ -47,10 +49,30 @@ figure:focus figcaption, figure:active figcaption{
 	opacity: .7;
 }
 .overlay-img-comparison{
-	position: absolute;
+	position: fixed;
+	overflow: scroll;
 	background: #fff;
 	left: 20%;
 	right: 20%;
 	top: 0;
 	text-align: center;
+}
+
+.overlay-img-comparison-scrollparent{
+	position: relative;
+	padding: 0; margin: 0;
+	width: 100%;
+}
+
+.overlay-img-comparison div.note{
+	position: absolute;
+	opacity: 0.4;
+	white-space: pre;
+	font-size: xx-small;
+	overflow: visible;
+}
+
+.overlay-img-comparison div.note:hover{
+	opacity: 1;
+	outline: 1px grey solid;
 }
