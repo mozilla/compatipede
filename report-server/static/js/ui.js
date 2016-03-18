@@ -229,7 +229,10 @@
       cell = siteRow.appendChild(document.createElement('td'));
       cell.className = 'screencapcell';
     }
-    if(doc._attachments) {
+    // We add only one attachment for each variant - hence the length === 0 check
+    // Attachments seem to get enumerated in FILO order so we get the newest
+    // image by limiting it to one.. (Wil this always be correct??)
+    if(doc._attachments && cell.getElementsByTagName('img').length === 0) {
       var attachment = Object.keys(doc._attachments)[0];
       var div = cell.appendChild(document.createElement('div'));
       var fig = div.appendChild(document.createElement('figure'));
