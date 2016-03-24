@@ -195,7 +195,7 @@ describe('tabSequence', () => {
         errorLogRequest = nock('http://hub:9999')
           .post('/getErrorLog', {})
           .reply(200, {
-            consoleLog : [{msg : 'something dangerous'}]
+            errorLog : [{msg : 'something dangerous'}]
           }),
         redirectRequest = nock('http://hub:9999')
           .post('/getRedirects', {})
@@ -241,12 +241,8 @@ describe('tabSequence', () => {
               }
             },
             screenshot : 'base64 png',
-            consoleLog : {
-              consoleLog : [{msg : 'something'}]
-            },
-            errorLog : {
-              consoleLog : [{msg : 'something dangerous'}]
-            },
+            consoleLog : [{msg : 'something'}],
+            errorLog : [{msg : 'something dangerous'}],
             pluginResults : {
               somePlugin : {}
             },
