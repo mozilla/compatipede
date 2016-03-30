@@ -438,7 +438,8 @@ describe('serialExecutor', () => {
             redirects : {
               'something' : 'url'+id
             }
-          }
+          },
+          runNumber : id
         }]);
       };
 
@@ -503,12 +504,14 @@ describe('serialExecutor', () => {
         results.should.containEql({
           redirects : {
             'something' : 'url1'
-          }
+          },
+          runNumber : 1
         });
         results.should.containEql({
           redirects : {
             'something' : 'url2'
-          }
+          },
+          runNumber : 2
         });
 
         callback.should.be.a.Function();
