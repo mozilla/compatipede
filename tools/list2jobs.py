@@ -118,7 +118,14 @@ if args['database'] not in server:
         },
         "byCampaignDocId" : {
           "map" : "function(doc) {\n            if(doc.jobId) {\n              emit([doc.jobId, doc.runNumber], doc._id);\n            }\n          }"
-        }
+        },
+       "byDomain": {
+           "map": "function(doc) {\n              emit(doc.jobDetails.domain, doc);\n            }\n          }"
+       },
+       "listDomains": {
+           "map": "function (doc) {\n            emit(doc.details.domain, null);\n          }",
+           "reduce": "function (key, values) {\n            return null;\n          }"
+       }
       },
       "filters" : {
         "newJobs" : "function(doc) { //for _change listener\n          return doc.status === 'new';\n        }"
@@ -165,6 +172,5 @@ for url in urllist:
                 # print(couchdoc)
                 db[couchdoc['_id']] = couchdoc;
                 jobcount += 1
-
                 
 print('Done. Created (or updated) %i Compatipede jobs from %i URLs' % (jobcount, urlcount))

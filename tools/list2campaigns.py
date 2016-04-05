@@ -92,7 +92,11 @@ if args['database'] not in server:
             },
             "byDomain": {
               "map" : "function(doc) {\n              emit(doc.details.domain, doc);\n            }\n          }"
-            }
+            },
+           "listDomains": {
+               "map": "function (doc) {\n            emit(doc.details.domain, null);\n          }",
+               "reduce": "function (key, values) {\n            return null;\n          }"
+           }
         }
     }
 
@@ -120,6 +124,10 @@ if args['jobsdatabase'] not in server:
         },
         "byDomain": {
           "map" : "function(doc) {\n              emit(doc.jobDetails.domain, doc);\n            }\n          }"
+        },
+        "listDomains": {
+           "map": "function (doc) {\n            emit(doc.details.domain, null);\n          }",
+           "reduce": "function (key, values) {\n            return null;\n          }"
         }
       },
       "filters" : {
@@ -167,7 +175,7 @@ for url in urllist:
            "runStatus": ""
         }
         # print(couchdoc)
-            
+        print(domain);
         db[couchdoc['_id']] = couchdoc;
         jobcount += 1
 
